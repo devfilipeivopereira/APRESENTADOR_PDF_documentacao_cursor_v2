@@ -307,6 +307,48 @@
             text-align: center;
         }
 
+        /* Modo offline / backup */
+        .backup-local-sidebar {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 15px;
+            flex-shrink: 0;
+        }
+        .backup-local-sidebar h3 {
+            font-size: 0.85rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .backup-local-desc {
+            font-size: 0.8rem;
+            color: #aaa;
+            line-height: 1.35;
+            margin-bottom: 12px;
+        }
+        .btn-backup-local {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: 1px solid rgba(78, 205, 196, 0.4);
+            border-radius: 8px;
+            cursor: pointer;
+            background: rgba(78, 205, 196, 0.15);
+            color: #4ecdc4;
+            transition: all 0.2s ease;
+        }
+        .btn-backup-local:hover {
+            background: rgba(78, 205, 196, 0.25);
+        }
+        .backup-local-status {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 8px;
+            min-height: 1.2em;
+        }
+
         /* Links de rede / Controle remoto */
         .network-links {
             background: #1a1a2e;
@@ -490,21 +532,28 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 52px;
+            min-height: 52px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
             padding: 0 20px;
             background: rgba(15, 15, 26, 0.95);
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             z-index: 1000;
-            gap: 16px;
         }
 
         .admin-header-nav {
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-wrap: wrap;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .admin-header-nav .top-nav-link {
+            flex-shrink: 0;
         }
 
         .connection-status {
@@ -661,6 +710,7 @@
         <nav class="admin-header-nav">
             <a href="/" class="top-nav-link">Tela inicial</a>
             <a href="/playlist" class="top-nav-link">Playlist</a>
+            <a href="#" id="adminLogoutLink" class="top-nav-link">Sair</a>
         </nav>
         <div class="connection-status" id="connectionStatus">Conectando...</div>
     </header>
@@ -698,6 +748,15 @@
                     <button type="button" class="btn-playlist-refresh" id="playlistRefresh">Atualizar</button>
                     <a href="/playlist" class="btn-playlist-manage">Gerir Playlist</a>
                 </div>
+            </div>
+
+            <!-- Modo offline / backup: carregar PDF do computador para o servidor (sem internet) -->
+            <div class="backup-local-sidebar" id="backupLocalSection" style="display: none;">
+                <h3>Modo offline / backup</h3>
+                <p class="backup-local-desc">Se a internet falhar, carregue um PDF do seu computador. O ficheiro fica no servidor e o controlo de slides continua pela rede local.</p>
+                <input type="file" id="backupLocalInput" accept=".pdf,application/pdf" style="display: none;">
+                <button type="button" class="btn-backup-local" id="backupLocalBtn">📁 Carregar PDF do computador</button>
+                <p class="backup-local-status" id="backupLocalStatus"></p>
             </div>
 
             <div class="presentation-info">

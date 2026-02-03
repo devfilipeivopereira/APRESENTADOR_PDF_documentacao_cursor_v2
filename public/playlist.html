@@ -30,6 +30,25 @@
             font-size: 0.9rem;
         }
         .back-link:hover { text-decoration: underline; }
+        .top-links-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .top-links-row .back-link { margin-bottom: 0; }
+        .logout-link-playlist {
+            flex-shrink: 0;
+            font-size: 0.9rem;
+            color: #888;
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            transition: color 0.2s, background 0.2s;
+        }
+        .logout-link-playlist:hover { color: #e94560; background: rgba(233,69,96,0.1); }
         .section {
             background: rgba(255,255,255,0.05);
             border-radius: 12px;
@@ -153,7 +172,10 @@
 </head>
 <body>
     <div class="container">
-        <a href="/" class="back-link">← Voltar ao menu</a>
+        <div class="top-links-row">
+            <a href="/" class="back-link">← Voltar ao menu</a>
+            <a href="#" id="playlistLogoutLink" class="logout-link-playlist">Sair</a>
+        </div>
         <h1>Playlist</h1>
         <p class="subtitle">Minhas apresentações – data, local e informações extras</p>
 
@@ -537,6 +559,12 @@
         document.getElementById('editEventDate')?.addEventListener('click', function() { openDatePicker(this); });
 
         loadPlaylist();
+
+        document.getElementById('playlistLogoutLink')?.addEventListener('click', async (e) => {
+            e.preventDefault();
+            try { await fetch('/api/logout', { method: 'POST' }); } catch (_) {}
+            window.location.href = '/login';
+        });
     </script>
 </body>
 </html>

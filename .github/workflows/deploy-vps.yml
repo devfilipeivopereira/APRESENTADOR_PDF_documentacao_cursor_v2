@@ -1,0 +1,25 @@
+# Atualiza a app na VPS quando fizer push na branch main
+name: Deploy na VPS
+
+on:
+  push:
+    branches: [main]
+  # Permite executar manualmente no GitHub (Actions → Deploy na VPS → Run workflow)
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /var/www/slides-app
+            git pull
+            npm install --production
+            pm2 restart slides
+            pm2 status

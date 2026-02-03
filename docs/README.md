@@ -2,16 +2,27 @@
 
 ## Visão Geral
 
-A Aplicação Cursor é uma solução inovadora para realizar apresentações de PDF de forma sincronizada em uma rede local. Ela foi projetada para oferecer uma experiência fluida tanto para o apresentador quanto para a audiência, separando claramente as interfaces de controle e visualização. Utilizando tecnologias modernas como Node.js, Express, Socket.io e PDF.js, a aplicação garante sincronização em tempo real e uma exibição otimizada dos slides.
+A Aplicação Cursor é uma solução para realizar apresentações de PDF de forma sincronizada em rede local ou online. Oferece experiência fluida para o apresentador e audiência, com interfaces distintas para controle e visualização. Utiliza Node.js, Express, Socket.io e PDF.js para sincronização em tempo real e exibição otimizada dos slides.
+
+## Autenticação
+
+*   **Login (`/login`):** Tela de entrada antes da página inicial. Acesso protegido com utilizador e palavra-passe (variáveis `LOGIN_USER` e `LOGIN_PASSWORD` no `.env`). Se não estiverem definidas, a aplicação funciona sem login.
+*   **Rotas protegidas:** `/`, `/playlist` e `/admin` exigem sessão válida; `/view` e `/remote` permanecem públicos para o projetor e controlo remoto.
+*   **Sessão:** express-session com cookie `httpOnly`; variável `SESSION_SECRET` no `.env`.
+
+## Modo Online e Modo Offline
+
+*   **Online (Supabase):** Upload na página inicial ou na Playlist → PDF vai para Supabase Storage, metadados para a tabela `presentations`. Playlist lista e carrega apresentações. Requer internet.
+*   **Offline / backup:** No Apresentador (`/admin`), secção "Modo offline / backup" → "Carregar PDF do computador". O PDF é guardado no servidor (pasta `uploads/`, configurável com `UPLOAD_DIR` no `.env`). Não usa Supabase; funciona só com rede local. A sincronização de slides (WebSocket) continua a funcionar na rede local.
 
 ## Funcionalidades Principais
 
-*   **Playlist (`/playlist`):** Tela para gerenciar apresentações: upload de PDF para Supabase Storage, cadastro com data, local e informações extras; editar, excluir e iniciar apresentação.
-*   **Upload de PDF:** Permite o upload de arquivos PDF (gravados no Supabase Storage e na tabela de playlist).
-*   **Sincronização em Tempo Real:** Garante que todos os dispositivos conectados exibam o mesmo slide simultaneamente.
+*   **Playlist (`/playlist`):** Gerir apresentações: upload de PDF para Supabase Storage, cadastro com data, local e informações extras; editar, excluir e iniciar apresentação.
+*   **Upload de PDF:** Na página inicial ou na playlist (Supabase); ou no Apresentador como backup local (modo offline).
+*   **Sincronização em Tempo Real:** Todos os dispositivos conectados exibem o mesmo slide simultaneamente (Socket.io).
 *   **Interface de Projetor (`/view`):** Tela limpa e em tela cheia, ideal para projetores. Transição suave entre slides (double-buffer, sem piscar).
-*   **Interface de Apresentador (`/admin`):** Painel de controle com slide atual, preview do próximo (também com double-buffer), botões de navegação e atalhos de teclado.
-*   **Controle Remoto (`/remote`):** Interface otimizada para celular e tablet na rede; swipe, menu retrátil com grade de slides (estilo Keynote), layout adaptável a retrato e paisagem.
+*   **Interface de Apresentador (`/admin`):** Painel de controle com slide atual, preview do próximo (double-buffer), botões de navegação, atalhos de teclado e secção de backup local.
+*   **Controle Remoto (`/remote`):** Interface para celular e tablet na rede; setas e Espaço no teclado; layout adaptável.
 *   **Responsividade:** Interfaces otimizadas para desktop, tablet e celular (incluindo iPad).
 
 ## Estrutura da Documentação
@@ -55,20 +66,23 @@ Certifique-se de ter o Node.js (versão LTS recomendada) e o npm instalados em s
 
 ### Execução
 
-1.  **Inicie o servidor:**
+1.  **Configure o `.env`:** Copie `.env.example` para `.env`. Defina pelo menos `PORT`, e para login: `LOGIN_USER`, `LOGIN_PASSWORD`, `SESSION_SECRET`. Para Supabase (modo online): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`. Para modo offline: `UPLOAD_DIR=./uploads`.
+
+2.  **Inicie o servidor:**
     ```bash
-    node server.js
-    # ou com nodemon para desenvolvimento:
-    # nodemon server.js
+    npm start
+    # ou: node server.js
+    # ou com nodemon: npm run dev
     ```
-    O servidor irá iniciar e exibir o IP local e a porta (ex: `http://192.168.1.x:3000`).
+    O servidor inicia e exibe o IP local e a porta (ex: `http://192.168.1.x:3000`).
 
-2.  **Acesse a Interface de Upload:**
-    Abra seu navegador e acesse o endereço IP do servidor (ex: `http://192.168.1.x:3000`). Faça o upload do arquivo PDF desejado.
+3.  **Login:** Aceda a `http://IP:3000` ou `http://IP:3000/login`. Se o login estiver ativo, introduza o utilizador e a palavra-passe.
 
-3.  **Apresentador:** No dispositivo de controle, acesse `http://IP:3000/admin`.
-4.  **Projetor:** No dispositivo de exibição, acesse `http://IP:3000/view`.
-5.  **Controle remoto:** No celular/tablet na mesma rede, acesse `http://IP:3000/remote`.
+4.  **Página inicial:** Após login, aceda ao menu (upload, Playlist, Apresentador, Controle remoto, Projetor).
+
+5.  **Apresentador:** `http://IP:3000/admin` (slide atual, próximo, navegação, backup local).
+6.  **Projetor:** `http://IP:3000/view` (tela cheia).
+7.  **Controle remoto:** `http://IP:3000/remote` (celular/tablet na mesma rede).
 
 ### Navegação na Apresentação
 
@@ -89,18 +103,20 @@ Na interface do projetor (`/view`):
 
 ```
 .
-├── server.js             # Servidor Node.js principal
-├── package.json          # Dependências e scripts
-├── .env.example          # Exemplo de variáveis de ambiente
+├── server.js             # Servidor Node.js (Express, Socket.io, Supabase, sessão, upload local)
+├── package.json          # Dependências (express-session, multer, etc.)
+├── .env.example          # Exemplo de variáveis de ambiente (LOGIN_*, SUPABASE_*, UPLOAD_DIR)
 ├── public/               # Frontend
-│   ├── index.html        # Menu + upload de PDF
+│   ├── index.html        # Menu + upload de PDF (Supabase)
+│   ├── login.html        # Página de login
+│   ├── playlist.html     # Playlist (Supabase)
 │   ├── view.html         # Interface do projetor
-│   ├── admin.html        # Interface do apresentador
+│   ├── admin.html        # Interface do apresentador (incl. backup local)
 │   ├── remote.html       # Controle remoto (celular/tablet)
 │   └── js/
 │       ├── view.js
 │       └── admin.js
-├── uploads/              # PDFs carregados (criado automaticamente)
+├── uploads/              # PDFs do modo offline (se UPLOAD_DIR=./uploads)
 └── docs/                 # Documentação
     ├── README.md
     ├── arquitetura.md

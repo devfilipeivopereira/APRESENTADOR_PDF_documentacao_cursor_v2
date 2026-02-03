@@ -1,0 +1,19 @@
+# Traefik dynamic config: slides.filipeivopereira.com → Node (porta 3000 no host)
+# Cert resolver: letsencryptresolver (igual ao teu Traefik)
+
+http:
+  routers:
+    slides-https:
+      rule: "Host(`slides.filipeivopereira.com`)"
+      service: slides-app
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencryptresolver
+
+  services:
+    slides-app:
+      loadBalancer:
+        servers:
+          - url: "http://76.13.168.1:3000"
+        passHostHeader: true

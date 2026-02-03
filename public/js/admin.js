@@ -21,6 +21,10 @@ const playlistList = document.getElementById('playlistList');
 const playlistEmpty = document.getElementById('playlistEmpty');
 const playlistError = document.getElementById('playlistError');
 const playlistRefresh = document.getElementById('playlistRefresh');
+const backupLocalSection = document.getElementById('backupLocalSection');
+const backupLocalInput = document.getElementById('backupLocalInput');
+const backupLocalBtn = document.getElementById('backupLocalBtn');
+const backupLocalStatus = document.getElementById('backupLocalStatus');
 
 // Double-buffer: slide principal e preview sem piscar
 let displayedCanvas = currentCanvasA;
@@ -152,6 +156,47 @@ async function loadPresentationFromPlaylist(id) {
 
 if (playlistRefresh) playlistRefresh.addEventListener('click', loadPlaylist);
 loadPlaylist();
+
+document.getElementById('adminLogoutLink')?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    try { await fetch('/api/logout', { method: 'POST' }); } catch (_) {}
+    window.location.href = '/login';
+});
+
+// Modo offline / backup: mostrar secção se o servidor tiver UPLOAD_DIR
+(async function initBackupLocal() {
+    if (!backupLocalSection || !backupLocalBtn || !backupLocalInput) return;
+    try {
+        const res = await fetch('/api/upload-local');
+        const data = await res.json().catch(() => ({}));
+        if (data.available) {
+            backupLocalSection.style.display = 'block';
+            backupLocalBtn.addEventListener('click', () => backupLocalInput.click());
+            backupLocalInput.addEventListener('change', async (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                backupLocalStatus.textContent = 'A enviar...';
+                backupLocalBtn.disabled = true;
+                try {
+                    const form = new FormData();
+                    form.append('pdf', file);
+                    const up = await fetch('/upload-local', { method: 'POST', body: form });
+                    const result = await up.json().catch(() => ({}));
+                    if (up.ok && result.success) {
+                        backupLocalStatus.textContent = 'Carregado: ' + (result.fileName || file.name);
+                    } else {
+                        backupLocalStatus.textContent = 'Erro: ' + (result.error || up.statusText);
+                    }
+                } catch (err) {
+                    backupLocalStatus.textContent = 'Erro: ' + (err.message || 'Falha de rede');
+                } finally {
+                    backupLocalBtn.disabled = false;
+                    backupLocalInput.value = '';
+                }
+            });
+        }
+    } catch (_) {}
+})();
 
 async function loadPDF(url, fileName) {
     try {

@@ -50,6 +50,34 @@
             font-size: 1rem;
         }
 
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .header-row h1 {
+            flex: 1 1 auto;
+            min-width: 0;
+            margin: 0;
+        }
+        .logout-link {
+            flex-shrink: 0;
+            font-size: 0.85rem;
+            color: #888;
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            transition: color 0.2s, background 0.2s;
+            white-space: nowrap;
+        }
+        .logout-link:hover {
+            color: #e94560;
+            background: rgba(233, 69, 96, 0.1);
+        }
+
         /* Menu Principal */
         .main-menu {
             margin-bottom: 30px;
@@ -484,7 +512,10 @@
 </head>
 <body>
     <div class="container">
-        <h1>Apresentações de PDF Remotas Online</h1>
+        <div class="header-row">
+            <h1>Apresentações de PDF Remotas Online</h1>
+            <a href="#" class="logout-link" id="logoutLink" title="Terminar sessão">Sair</a>
+        </div>
         <p class="subtitle">Sincronize e controle apresentações em tempo real</p>
 
         <!-- Menu Principal -->
@@ -582,6 +613,14 @@
     </div>
 
     <script>
+        document.getElementById('logoutLink')?.addEventListener('click', async (e) => {
+            e.preventDefault();
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+            } catch (_) {}
+            window.location.href = '/login';
+        });
+
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const fileInfo = document.getElementById('fileInfo');

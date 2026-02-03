@@ -1,11 +1,17 @@
 require('dotenv').config();
 const express = require('express');
+const session = require('express-session');
 const http = require('http');
 const https = require('https');
 const { Server } = require('socket.io');
 const multer = require('multer');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
+
+const LOGIN_USER = process.env.LOGIN_USER || '';
+const LOGIN_PASSWORD = process.env.LOGIN_PASSWORD || '';
+const SESSION_SECRET = process.env.SESSION_SECRET || 'change-me-in-production';
+const AUTH_ENABLED = !!(LOGIN_USER && LOGIN_PASSWORD);
 
 const app = express();
 const server = http.createServer(app);
@@ -15,6 +21,8 @@ const PORT = process.env.PORT || 3000;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const SUPABASE_BUCKET = process.env.SUPABASE_BUCKET || 'presentations';
+/** Diretório local para modo offline/backup: PDFs carregados do computador sem Supabase */
+const UPLOAD_DIR = process.env.UPLOAD_DIR || '';
 
 let supabase = null;
 if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
@@ -37,22 +45,109 @@ const multerMemory = multer({
     limits: { fileSize: 50 * 1024 * 1024 }
 });
 
-app.use(express.static('public'));
-app.use(express.json());
+// Multer para upload local (modo offline) — só existe se UPLOAD_DIR estiver definido
+let multerDisk = null;
+if (UPLOAD_DIR) {
+    const fs = require('fs');
+    const uploadPath = path.resolve(__dirname, UPLOAD_DIR);
+    if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath, { recursive: true });
+        console.log('[upload-local] Diretório criado:', uploadPath);
+    }
+    multerDisk = multer({
+        storage: multer.diskStorage({
+            destination: (req, file, cb) => cb(null, uploadPath),
+            filename: (req, file, cb) => {
+                const safe = (file.originalname || 'slide.pdf').replace(/[^a-zA-Z0-9._-]/g, '_');
+                cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}-${safe}`);
+            }
+        }),
+        fileFilter: (req, file, cb) => {
+            if (file.mimetype === 'application/pdf') cb(null, true);
+            else cb(new Error('Apenas arquivos PDF são permitidos!'), false);
+        },
+        limits: { fileSize: 50 * 1024 * 1024 }
+    });
+}
 
-app.get('/', (req, res) => {
+function getBaseUrl(req) {
+    return process.env.BASE_URL || (req.protocol + '://' + req.get('host'));
+}
+
+app.use(express.json());
+app.use(session({
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { httpOnly: true, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 }
+}));
+
+function requireAuth(req, res, next) {
+    if (!AUTH_ENABLED || (req.session && req.session.user)) return next();
+    if (req.xhr || req.headers.accept?.includes('application/json')) {
+        return res.status(401).json({ error: 'Não autenticado.' });
+    }
+    const redirect = encodeURIComponent(req.originalUrl || '/');
+    return res.redirect('/login?redirect=' + redirect);
+}
+
+app.get('/login', (req, res) => {
+    if (AUTH_ENABLED && req.session && req.session.user) {
+        return res.redirect(req.query.redirect || '/');
+    }
+    const fs = require('fs');
+    const loginPath = path.join(__dirname, 'public', 'login.html');
+    try {
+        const html = fs.readFileSync(loginPath, 'utf8');
+        res.set({
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'no-store, no-cache, must-revalidate'
+        }).send(html);
+    } catch (err) {
+        console.error('[login] readFile error:', err);
+        res.status(500).set('Content-Type', 'text/html; charset=utf-8').send('<h1>Erro</h1><p>Página de login não encontrada.</p>');
+    }
+});
+app.get('/login/', (req, res) => res.redirect(301, '/login'));
+
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+app.use('/.well-known', (req, res) => res.status(204).end());
+
+app.use(express.static('public'));
+if (UPLOAD_DIR) {
+    app.use('/uploads', express.static(path.resolve(__dirname, UPLOAD_DIR)));
+}
+
+app.post('/api/login', express.json(), (req, res) => {
+    if (!AUTH_ENABLED) {
+        return res.json({ success: true, user: 'admin' });
+    }
+    const { username, password } = req.body || {};
+    if (username === LOGIN_USER && password === LOGIN_PASSWORD) {
+        req.session.user = username;
+        return res.json({ success: true, user: username });
+    }
+    res.status(401).json({ error: 'Utilizador ou palavra-passe incorretos.' });
+});
+
+app.post('/api/logout', (req, res) => {
+    req.session.destroy(() => {});
+    res.json({ success: true });
+});
+
+app.get('/', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 app.get('/view', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'view.html'));
 });
-app.get('/admin', (req, res) => {
+app.get('/admin', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 app.get('/remote', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'remote.html'));
 });
-app.get('/playlist', (req, res) => {
+app.get('/playlist', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'playlist.html'));
 });
 
@@ -74,8 +169,12 @@ app.get('/api/health', (req, res) => {
     res.json({ ok: true, supabase: !!supabase });
 });
 
-// Log antes do multer para ver se o pedido chega
-app.post('/upload', (req, res, next) => {
+/** Modo offline/backup: indica se é possível carregar PDF do computador para o servidor (sem internet/Supabase) */
+app.get('/api/upload-local', (req, res) => {
+    res.json({ available: !!UPLOAD_DIR });
+});
+
+app.post('/upload', requireAuth, (req, res, next) => {
     console.log('[upload] POST /upload recebido (antes do multer)');
     next();
 }, multerMemory.single('pdf'), async (req, res) => {
@@ -173,6 +272,30 @@ app.post('/upload', (req, res, next) => {
     }
 });
 
+// Upload local (modo offline/backup): grava PDF no servidor sem Supabase; sincronização de slides via rede local
+if (multerDisk) {
+    app.post('/upload-local', requireAuth, multerDisk.single('pdf'), (req, res) => {
+        if (!req.file) {
+            return res.status(400).json({ error: 'Nenhum arquivo enviado ou formato inválido.' });
+        }
+        const baseUrl = getBaseUrl(req);
+        const savedName = path.basename(req.file.path);
+        const pdfUrl = baseUrl + '/uploads/' + savedName;
+        const fileName = req.file.originalname || savedName || 'Apresentação.pdf';
+        presentationState.pdfUrl = pdfUrl;
+        presentationState.fileName = fileName;
+        presentationState.currentSlide = 1;
+        presentationState.totalSlides = 0;
+        io.emit('pdfLoaded', {
+            pdfUrl: presentationState.pdfUrl,
+            fileName: presentationState.fileName,
+            currentSlide: presentationState.currentSlide
+        });
+        console.log('[upload-local] PDF carregado (backup local):', fileName, '| url:', pdfUrl);
+        res.json({ success: true, pdfUrl, fileName });
+    });
+}
+
 // Erros do Multer (ficheiro grande, tipo inválido, etc.)
 app.use((err, req, res, next) => {
     if (err && err.code === 'LIMIT_FILE_SIZE') {
@@ -226,7 +349,7 @@ function getPdfSizeFromUrl(pdfUrl, timeoutMs = 6000) {
     });
 }
 
-app.get('/api/playlist', async (req, res) => {
+app.get('/api/playlist', requireAuth, async (req, res) => {
     if (!supabase) {
         return res.status(503).json({ error: 'Supabase não configurado.' });
     }
@@ -269,7 +392,7 @@ app.get('/api/playlist', async (req, res) => {
     }
 });
 
-app.patch('/api/playlist/:id', async (req, res) => {
+app.patch('/api/playlist/:id', requireAuth, async (req, res) => {
     if (!supabase) {
         return res.status(503).json({ error: 'Supabase não configurado.' });
     }
@@ -301,7 +424,7 @@ app.patch('/api/playlist/:id', async (req, res) => {
     }
 });
 
-app.delete('/api/playlist/:id', async (req, res) => {
+app.delete('/api/playlist/:id', requireAuth, async (req, res) => {
     if (!supabase) {
         return res.status(503).json({ error: 'Supabase não configurado.' });
     }
@@ -336,7 +459,7 @@ app.delete('/api/playlist/:id', async (req, res) => {
     }
 });
 
-app.post('/api/playlist/:id/refresh-size', async (req, res) => {
+app.post('/api/playlist/:id/refresh-size', requireAuth, async (req, res) => {
     if (!supabase) {
         return res.status(503).json({ error: 'Supabase não configurado.' });
     }
@@ -372,7 +495,7 @@ app.post('/api/playlist/:id/refresh-size', async (req, res) => {
     }
 });
 
-app.post('/api/playlist/load', async (req, res) => {
+app.post('/api/playlist/load', requireAuth, async (req, res) => {
     if (!supabase) {
         return res.status(503).json({ error: 'Supabase não configurado.' });
     }
@@ -460,6 +583,14 @@ function getLocalIP() {
         }
     }
     return 'localhost';
+}
+
+app.use((req, res) => {
+    console.log('[404]', req.method, req.originalUrl);
+    res.status(404).type('html').send('<h1>404</h1><p>Não encontrado: ' + escapeHtml(req.originalUrl) + '</p>');
+});
+function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 server.listen(PORT, () => {

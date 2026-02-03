@@ -245,6 +245,13 @@
         .btn-quick:active { background: #3d3d5c; }
         .btn-quick:disabled { opacity: 0.3; }
 
+        .keyboard-hint-remote {
+            margin-top: 10px;
+            font-size: 0.75rem;
+            color: #666;
+            text-align: center;
+        }
+
         /* Drawer */
         .drawer-overlay {
             position: fixed;
@@ -426,6 +433,7 @@
             <button class="btn-quick" id="firstBtn" disabled>⏮ Primeiro</button>
             <button class="btn-quick" id="lastBtn" disabled>Último ⏭</button>
         </div>
+        <p class="keyboard-hint-remote">← → ou Espaço para avançar/voltar (teclado)</p>
     </div>
 
     <div class="drawer-overlay" id="drawerOverlay"></div>
@@ -791,6 +799,25 @@
         $('openDrawerBtn').onclick = openDrawer;
         $('closeDrawerBtn').onclick = closeDrawer;
         $('drawerOverlay').onclick = closeDrawer;
+
+        // Teclado: setas e espaço (para controlar noutro PC)
+        document.addEventListener('keydown', (e) => {
+            if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName)) return;
+            switch (e.key) {
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    if (pdfDoc && currentPage > 1) goToPage(currentPage - 1);
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    if (pdfDoc && currentPage < totalPages) goToPage(currentPage + 1);
+                    break;
+                case ' ':
+                    e.preventDefault();
+                    if (pdfDoc && currentPage < totalPages) goToPage(currentPage + 1);
+                    break;
+            }
+        });
 
         // Swipe
         let touchX = 0;
