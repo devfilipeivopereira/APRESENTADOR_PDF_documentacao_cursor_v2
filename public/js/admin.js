@@ -17,10 +17,15 @@ const nextBtn = document.getElementById('nextBtn');
 const mainSlide = document.getElementById('mainSlide');
 const openViewBtn = document.getElementById('openViewBtn');
 const previewSlideContainer = document.getElementById('previewSlideContainer');
-const playlistList = document.getElementById('playlistList');
+const playlistSelect = document.getElementById('playlistSelect');
+const playlistSearch = document.getElementById('playlistSearch');
+const playlistSearchResults = document.getElementById('playlistSearchResults');
 const playlistEmpty = document.getElementById('playlistEmpty');
 const playlistError = document.getElementById('playlistError');
 const playlistRefresh = document.getElementById('playlistRefresh');
+
+/** Lista completa da playlist (para filtrar no "Procurar") */
+let playlistItems = [];
 const backupLocalSection = document.getElementById('backupLocalSection');
 const backupLocalInput = document.getElementById('backupLocalInput');
 const backupLocalBtn = document.getElementById('backupLocalBtn');
@@ -99,32 +104,50 @@ socket.on('stateUpdated', (state) => {
     }
 });
 
-// --- Playlist: listar e carregar apresentações ---
+// --- Playlist: lista suspensa + procurar ---
+function fillPlaylistSelect(items) {
+    if (!playlistSelect) return;
+    const opts = playlistSelect.querySelectorAll('option');
+    for (let i = opts.length - 1; i >= 1; i--) opts[i].remove();
+    items.forEach((p) => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.title || p.file_name || 'Sem título';
+        opt.title = p.event_date ? `${p.title || ''} – ${p.event_date}` : (p.title || '');
+        playlistSelect.appendChild(opt);
+    });
+}
+
+function filterPlaylistBySearch(q) {
+    const qn = (q || '').trim().toLowerCase();
+    if (!qn) return playlistItems;
+    return playlistItems.filter((p) => {
+        const title = (p.title || '').toLowerCase();
+        const file = (p.file_name || '').toLowerCase();
+        const date = (p.event_date || '').toLowerCase();
+        const location = (p.location || '').toLowerCase();
+        const pregador = (p.pregador || '').toLowerCase();
+        const extra = (p.extra_info || '').toLowerCase();
+        return title.includes(qn) || file.includes(qn) || date.includes(qn) || location.includes(qn) || pregador.includes(qn) || extra.includes(qn);
+    });
+}
+
 async function loadPlaylist() {
-    if (!playlistList) return;
+    if (!playlistSelect) return;
     playlistEmpty.style.display = 'none';
     playlistError.style.display = 'none';
-    playlistList.innerHTML = '';
+    if (playlistSearch) playlistSearch.value = '';
     try {
         const res = await fetch('/api/playlist');
         if (!res.ok) throw new Error(res.statusText || 'Erro ao carregar');
         const items = await res.json();
-        if (!items || items.length === 0) {
+        playlistItems = items || [];
+        if (playlistItems.length === 0) {
             playlistEmpty.style.display = 'block';
+            fillPlaylistSelect([]);
             return;
         }
-        items.forEach((p) => {
-            const li = document.createElement('li');
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'playlist-item';
-            btn.dataset.id = p.id;
-            btn.textContent = p.title || p.file_name || 'Sem título';
-            btn.title = p.event_date ? `${p.title || ''} – ${p.event_date}` : (p.title || '');
-            btn.addEventListener('click', () => loadPresentationFromPlaylist(p.id));
-            li.appendChild(btn);
-            playlistList.appendChild(li);
-        });
+        fillPlaylistSelect(playlistItems);
     } catch (err) {
         console.error('Playlist:', err);
         playlistError.textContent = err.message || 'Erro ao carregar.';
@@ -133,8 +156,8 @@ async function loadPlaylist() {
 }
 
 async function loadPresentationFromPlaylist(id) {
-    const buttons = playlistList.querySelectorAll('.playlist-item');
-    buttons.forEach((b) => { b.disabled = true; });
+    if (!playlistSelect) return;
+    playlistSelect.disabled = true;
     try {
         const res = await fetch('/api/playlist/load', {
             method: 'POST',
@@ -150,11 +173,62 @@ async function loadPresentationFromPlaylist(id) {
         console.error('Load playlist:', err);
         alert(err.message || 'Erro ao carregar apresentação.');
     } finally {
-        buttons.forEach((b) => { b.disabled = false; });
+        playlistSelect.disabled = false;
     }
 }
 
 if (playlistRefresh) playlistRefresh.addEventListener('click', loadPlaylist);
+if (playlistSelect) {
+    playlistSelect.addEventListener('change', () => {
+        const id = playlistSelect.value;
+        if (id) loadPresentationFromPlaylist(id);
+    });
+}
+function updateSearchResults() {
+    const q = (playlistSearch && playlistSearch.value) ? playlistSearch.value.trim() : '';
+    if (!playlistSearchResults) return;
+    if (!q) {
+        playlistSearchResults.classList.remove('visible');
+        playlistSearchResults.innerHTML = '';
+        return;
+    }
+    const filtered = filterPlaylistBySearch(playlistSearch.value);
+    playlistSearchResults.classList.add('visible');
+    if (filtered.length === 0) {
+        playlistSearchResults.innerHTML = '<div class="playlist-result-empty">Nenhuma correspondência</div>';
+        return;
+    }
+    playlistSearchResults.innerHTML = '';
+    filtered.forEach((p) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'playlist-result-item';
+        btn.textContent = p.title || p.file_name || 'Sem título';
+        btn.title = [p.event_date, p.location, p.pregador].filter(Boolean).join(' · ') || (p.title || '');
+        btn.addEventListener('click', () => {
+            loadPresentationFromPlaylist(p.id);
+            if (playlistSearch) playlistSearch.value = '';
+            updateSearchResults();
+        });
+        playlistSearchResults.appendChild(btn);
+    });
+}
+
+if (playlistSearch) {
+    playlistSearch.addEventListener('input', () => {
+        const filtered = filterPlaylistBySearch(playlistSearch.value);
+        fillPlaylistSelect(filtered);
+        updateSearchResults();
+    });
+    playlistSearch.addEventListener('focus', () => {
+        if (playlistSearch.value.trim()) updateSearchResults();
+    });
+    playlistSearch.addEventListener('blur', () => {
+        setTimeout(() => {
+            if (playlistSearchResults) playlistSearchResults.classList.remove('visible');
+        }, 200);
+    });
+}
 loadPlaylist();
 
 document.getElementById('adminLogoutLink')?.addEventListener('click', async (e) => {
