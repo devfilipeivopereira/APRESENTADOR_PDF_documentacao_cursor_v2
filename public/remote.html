@@ -113,6 +113,17 @@
         }
         .btn-home:hover { background: rgba(255, 255, 255, 0.15); }
 
+        .btn-fullscreen {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .btn-fullscreen:hover { background: rgba(78, 205, 196, 0.2); color: #4ecdc4; }
+
         .slides-area {
             flex: 1;
             display: grid;
@@ -389,6 +400,7 @@
                 <p class="remote-hint" id="remoteHint">Conectado ao mesmo servidor do apresentador. Use o link ou QR no Apresentador para abrir esta página noutro dispositivo.</p>
             </div>
             <div class="header-right">
+                <button type="button" class="btn-fullscreen" id="fullscreenBtn" title="Alternar tela cheia">⛶ Tela cheia</button>
                 <a href="/" class="btn-home">Página inicial</a>
                 <button class="btn-grid" id="openDrawerBtn">▦ Slides</button>
                 <span class="connection-badge" id="connectionBadge">...</span>
@@ -464,6 +476,18 @@
         let gridRendered = false;
 
         const socket = io();
+
+        (function() {
+            const btn = document.getElementById('fullscreenBtn');
+            if (!btn) return;
+            function toggle() {
+                if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+                else document.exitFullscreen();
+            }
+            function updateText() { btn.textContent = document.fullscreenElement ? '⛶ Sair da tela cheia' : '⛶ Tela cheia'; }
+            btn.addEventListener('click', toggle);
+            document.addEventListener('fullscreenchange', updateText);
+        })();
 
         // Elementos (double-buffer para transição suave)
         const $ = id => document.getElementById(id);

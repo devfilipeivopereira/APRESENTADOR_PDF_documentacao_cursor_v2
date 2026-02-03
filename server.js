@@ -71,7 +71,10 @@ if (UPLOAD_DIR) {
 }
 
 function getBaseUrl(req) {
-    return process.env.BASE_URL || (req.protocol + '://' + req.get('host'));
+    if (process.env.BASE_URL) return process.env.BASE_URL.replace(/\/$/, '');
+    const proto = (req.get('x-forwarded-proto') || req.protocol || 'http').split(',')[0].trim().toLowerCase();
+    const host = req.get('x-forwarded-host') || req.get('host') || '';
+    return (proto === 'https' ? 'https' : 'http') + '://' + host;
 }
 
 app.use(express.json());

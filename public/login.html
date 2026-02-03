@@ -118,6 +118,19 @@
         .error-msg.visible {
             display: block;
         }
+        .fullscreen-btn {
+            display: block;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: #888;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .fullscreen-btn:hover { color: #4ecdc4; border-color: rgba(78,205,196,0.4); }
     </style>
 </head>
 <body>
@@ -137,6 +150,7 @@
                 <input type="password" id="password" name="password" placeholder="Palavra-passe" required autocomplete="current-password">
             </div>
             <button type="submit" class="btn-login" id="btnLogin">Entrar</button>
+            <button type="button" class="fullscreen-btn" id="fullscreenBtn" title="Alternar tela cheia">⛶ Tela cheia</button>
         </form>
     </div>
 
@@ -180,6 +194,18 @@
                 btnLogin.textContent = 'Entrar';
             }
         });
+
+        (function() {
+            const btn = document.getElementById('fullscreenBtn');
+            if (!btn) return;
+            function toggle() {
+                if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+                else document.exitFullscreen();
+            }
+            function updateText() { btn.textContent = document.fullscreenElement ? '⛶ Sair da tela cheia' : '⛶ Tela cheia'; }
+            btn.addEventListener('click', toggle);
+            document.addEventListener('fullscreenchange', updateText);
+        })();
     </script>
 </body>
 </html>

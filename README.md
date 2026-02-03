@@ -12,6 +12,7 @@ Aplicação Node.js para apresentações de PDF em tempo real. PDFs no Supabase 
 - **Projetor** (`/view`) – tela cheia, transição suave (double-buffer)
 - **Apresentador** (`/admin`) – slide atual + preview do próximo, controles, atalhos e secção de backup local
 - **Controle remoto** (`/remote`) – uso em celular/tablet, setas e Espaço no teclado
+- **Tela cheia** – botão em todas as telas (página inicial, Playlist, Apresentador, Controle remoto, Login, Projetor)
 - **Sincronização em tempo real** via Socket.io
 - **Acesso na rede** – links por IP para projetor e controle remoto
 
@@ -95,6 +96,7 @@ Documentação completa em **[docs/](docs/)**:
 3. **Modo offline (opcional):** Defina `UPLOAD_DIR=./uploads` para ativar "Carregar PDF do computador" no Apresentador (PDF guardado no servidor, sem Supabase).
 4. **Supabase (modo online):** Crie o bucket e a tabela conforme [docs/supabase-setup.md](docs/supabase-setup.md). No `.env`:
    - `PORT` – porta do servidor (padrão: 3000)
+   - `BASE_URL` – em produção com HTTPS, use `https://teu-dominio.com` (evita Mixed Content nos PDFs do modo offline)
    - `SUPABASE_URL` – URL do Supabase na VPS
    - `SUPABASE_SERVICE_ROLE_KEY` – chave service_role do Supabase
    - `SUPABASE_BUCKET` – (opcional) nome do bucket; padrão: `presentations`

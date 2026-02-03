@@ -163,6 +163,18 @@ document.getElementById('adminLogoutLink')?.addEventListener('click', async (e) 
     window.location.href = '/login';
 });
 
+(function() {
+    const btn = document.getElementById('fullscreenBtn');
+    if (!btn) return;
+    function toggle() {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+        else document.exitFullscreen();
+    }
+    function updateText() { btn.textContent = document.fullscreenElement ? '⛶ Sair da tela cheia' : '⛶ Tela cheia'; }
+    btn.addEventListener('click', toggle);
+    document.addEventListener('fullscreenchange', updateText);
+})();
+
 // Modo offline / backup: mostrar secção se o servidor tiver UPLOAD_DIR
 (async function initBackupLocal() {
     if (!backupLocalSection || !backupLocalBtn || !backupLocalInput) return;

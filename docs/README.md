@@ -13,7 +13,7 @@ A Aplicação Cursor é uma solução para realizar apresentações de PDF de fo
 ## Modo Online e Modo Offline
 
 *   **Online (Supabase):** Upload na página inicial ou na Playlist → PDF vai para Supabase Storage, metadados para a tabela `presentations`. Playlist lista e carrega apresentações. Requer internet.
-*   **Offline / backup:** No Apresentador (`/admin`), secção "Modo offline / backup" → "Carregar PDF do computador". O PDF é guardado no servidor (pasta `uploads/`, configurável com `UPLOAD_DIR` no `.env`). Não usa Supabase; funciona só com rede local. A sincronização de slides (WebSocket) continua a funcionar na rede local.
+*   **Offline / backup:** No Apresentador (`/admin`), secção "Modo offline / backup" → "Carregar PDF do computador". O PDF é guardado no servidor (pasta `uploads/`, configurável com `UPLOAD_DIR` no `.env`). Não usa Supabase; funciona só com rede local. A sincronização de slides (WebSocket) continua a funcionar na rede local. **Em produção (HTTPS):** defina `BASE_URL=https://teu-dominio.com` no `.env` para que as URLs dos PDFs locais sejam HTTPS e o browser não bloqueie por Mixed Content.
 
 ## Funcionalidades Principais
 
@@ -23,6 +23,7 @@ A Aplicação Cursor é uma solução para realizar apresentações de PDF de fo
 *   **Interface de Projetor (`/view`):** Tela limpa e em tela cheia, ideal para projetores. Transição suave entre slides (double-buffer, sem piscar).
 *   **Interface de Apresentador (`/admin`):** Painel de controle com slide atual, preview do próximo (double-buffer), botões de navegação, atalhos de teclado e secção de backup local.
 *   **Controle Remoto (`/remote`):** Interface para celular e tablet na rede; setas e Espaço no teclado; layout adaptável.
+*   **Tela cheia:** Todas as telas (página inicial, Playlist, Apresentador, Controle remoto, Login, Projetor) têm botão para alternar tela cheia (Fullscreen API).
 *   **Responsividade:** Interfaces otimizadas para desktop, tablet e celular (incluindo iPad).
 
 ## Estrutura da Documentação
@@ -37,6 +38,7 @@ Esta pasta `/docs` contém a documentação completa do projeto, organizada nos 
 *   [`supabase-setup.md`](./supabase-setup.md): Configuração do Supabase (bucket e tabela `presentations`) na VPS.
 *   **[`deploy-do-zero.md`](./deploy-do-zero.md):** Deploy na VPS do zero (Node, projeto, .env, PM2, Nginx, HTTPS).
 *   [`deploy-vps.md`](./deploy-vps.md): Deploy na VPS – guia detalhado.
+*   [`atualizar-vps-agora.md`](./atualizar-vps-agora.md): Atualizar a VPS (código + .env) após push.
 *   [`deploy-checklist.md`](./deploy-checklist.md): Checklist rápido de deploy.
 
 ### Arquivos de Configuração Essenciais

@@ -78,6 +78,20 @@
             background: rgba(233, 69, 96, 0.1);
         }
 
+        .fullscreen-btn {
+            flex-shrink: 0;
+            font-size: 0.85rem;
+            color: #888;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: color 0.2s, background 0.2s;
+        }
+        .fullscreen-btn:hover { color: #4ecdc4; background: rgba(78,205,196,0.15); }
+
         /* Menu Principal */
         .main-menu {
             margin-bottom: 30px;
@@ -514,6 +528,7 @@
     <div class="container">
         <div class="header-row">
             <h1>Apresentações de PDF Remotas Online</h1>
+            <button type="button" class="fullscreen-btn" id="fullscreenBtn" title="Alternar tela cheia">⛶ Tela cheia</button>
             <a href="#" class="logout-link" id="logoutLink" title="Terminar sessão">Sair</a>
         </div>
         <p class="subtitle">Sincronize e controle apresentações em tempo real</p>
@@ -615,11 +630,21 @@
     <script>
         document.getElementById('logoutLink')?.addEventListener('click', async (e) => {
             e.preventDefault();
-            try {
-                await fetch('/api/logout', { method: 'POST' });
-            } catch (_) {}
+            try { await fetch('/api/logout', { method: 'POST' }); } catch (_) {}
             window.location.href = '/login';
         });
+
+        (function() {
+            const btn = document.getElementById('fullscreenBtn');
+            if (!btn) return;
+            function toggle() {
+                if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+                else document.exitFullscreen();
+            }
+            function updateText() { btn.textContent = document.fullscreenElement ? '⛶ Sair da tela cheia' : '⛶ Tela cheia'; }
+            btn.addEventListener('click', toggle);
+            document.addEventListener('fullscreenchange', updateText);
+        })();
 
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');

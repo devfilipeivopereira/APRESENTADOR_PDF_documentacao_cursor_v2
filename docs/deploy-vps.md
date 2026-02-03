@@ -76,21 +76,29 @@ Criar o `.env` na raiz do projeto (mesma pasta do `server.js`):
 nano .env
 ```
 
-Conteúdo mínimo (ajusta com os teus valores reais):
+Conteúdo recomendado (ajusta com os teus valores reais):
 
 ```env
 PORT=3000
+
+# Login (obrigatório para aceder à página inicial, Playlist e Apresentador)
+LOGIN_USER=pastorfilipeivopereira
+LOGIN_PASSWORD=@Drf22062014
+SESSION_SECRET=uma_frase_secreta_longa_altere_em_producao
 
 BASE_URL=https://slides.filipeivopereira.com
 
 SUPABASE_URL=https://teu-projeto.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGci...
 SUPABASE_BUCKET=presentations
+
+# Modo offline / backup (opcional): ativa "Carregar PDF do computador" no Apresentador
+UPLOAD_DIR=./uploads
 ```
 
 Guardar: `Ctrl+O`, Enter, `Ctrl+X`.
 
-**Importante:** O `BASE_URL` é o que faz os links e o QR no Apresentador mostrarem sempre `https://slides.filipeivopereira.com/remote` (e os outros caminhos). Não faças commit do `.env`; ele não deve estar no Git.
+**Importante:** O `BASE_URL` deve ser **https://** quando acedes ao site por HTTPS (ex.: `BASE_URL=https://slides.filipeivopereira.com`). Assim os links e o QR no Apresentador ficam corretos e as URLs dos PDFs do modo offline são HTTPS (evita Mixed Content). Não faças commit do `.env`; ele não deve estar no Git.
 
 ---
 
@@ -233,16 +241,39 @@ Depois, na VPS: `cd /var/www/slides-app && npm install --production && pm2 resta
 
 ## 9. Atualizar o projeto (deploy de nova versão)
 
-Com Git:
+### 9.1 Atualizar código (git pull + PM2)
+
+Conecta à VPS e executa:
 
 ```bash
+ssh root@76.13.168.1
+# ou: ssh teu_user@76.13.168.1
+
 cd /var/www/slides-app
 git pull
 npm install --production
 pm2 restart slides
+pm2 status
 ```
 
 Sem Git: enviar de novo os ficheiros por SCP e depois `npm install` e `pm2 restart slides`.
+
+### 9.2 Atualizar o `.env` na VPS (quando há novas variáveis)
+
+Se o projeto passou a usar novas variáveis (ex.: login, modo offline), edita o `.env` na VPS e adiciona-as:
+
+```bash
+cd /var/www/slides-app
+nano .env
+```
+
+Garante que existem pelo menos:
+
+- `LOGIN_USER` e `LOGIN_PASSWORD` – para a tela de login (se vazios, a app funciona sem login)
+- `SESSION_SECRET` – segredo para a sessão (altera em produção)
+- `UPLOAD_DIR=./uploads` – (opcional) para ativar "Carregar PDF do computador" no Apresentador
+
+Depois de guardar: `pm2 restart slides`.
 
 ---
 
@@ -257,7 +288,7 @@ sudo apt-get install -y nodejs
 cd /var/www && git clone <TEU_REPO> slides-app && cd slides-app
 npm install --production
 
-# 3) .env (criar manualmente com BASE_URL e Supabase)
+# 3) .env (criar manualmente: PORT, LOGIN_*, SESSION_SECRET, BASE_URL, Supabase, UPLOAD_DIR)
 nano .env
 
 # 4) PM2

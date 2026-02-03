@@ -49,6 +49,18 @@
             transition: color 0.2s, background 0.2s;
         }
         .logout-link-playlist:hover { color: #e94560; background: rgba(233,69,96,0.1); }
+        .fullscreen-btn-playlist {
+            flex-shrink: 0;
+            font-size: 0.9rem;
+            color: #888;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .fullscreen-btn-playlist:hover { color: #4ecdc4; background: rgba(78,205,196,0.15); }
         .section {
             background: rgba(255,255,255,0.05);
             border-radius: 12px;
@@ -174,6 +186,7 @@
     <div class="container">
         <div class="top-links-row">
             <a href="/" class="back-link">← Voltar ao menu</a>
+            <button type="button" class="fullscreen-btn-playlist" id="fullscreenBtn" title="Alternar tela cheia">⛶ Tela cheia</button>
             <a href="#" id="playlistLogoutLink" class="logout-link-playlist">Sair</a>
         </div>
         <h1>Playlist</h1>
@@ -565,6 +578,18 @@
             try { await fetch('/api/logout', { method: 'POST' }); } catch (_) {}
             window.location.href = '/login';
         });
+
+        (function() {
+            const btn = document.getElementById('fullscreenBtn');
+            if (!btn) return;
+            function toggle() {
+                if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+                else document.exitFullscreen();
+            }
+            function updateText() { btn.textContent = document.fullscreenElement ? '⛶ Sair da tela cheia' : '⛶ Tela cheia'; }
+            btn.addEventListener('click', toggle);
+            document.addEventListener('fullscreenchange', updateText);
+        })();
     </script>
 </body>
 </html>
