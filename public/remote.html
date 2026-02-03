@@ -390,20 +390,47 @@
             .slides-area { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
             .slides-grid { grid-template-columns: repeat(2, 1fr); }
         }
+
+        /* Mobile: só ícones no header, sem texto "Controle remoto" */
+        @media (max-width: 768px) {
+            .header-title-wrap { display: none !important; }
+            .header-right .btn-label { display: none; }
+            .header-right .btn-icon { margin: 0; font-size: 1.2rem; }
+            .btn-fullscreen, .btn-home, .btn-grid {
+                min-width: 44px;
+                min-height: 44px;
+                padding: 10px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .btn-fullscreen .btn-icon, .btn-grid .btn-icon { font-size: 1.3rem; }
+            .btn-home { font-size: 1.2rem; }
+            .connection-badge {
+                width: 14px;
+                height: 14px;
+                padding: 0;
+                border-radius: 50%;
+                font-size: 0;
+                line-height: 0;
+                text-indent: -999px;
+                overflow: hidden;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div>
+            <div class="header-title-wrap">
                 <h1>Controle Remoto</h1>
                 <p class="remote-hint" id="remoteHint">Conectado ao mesmo servidor do apresentador. Use o link ou QR no Apresentador para abrir esta página noutro dispositivo.</p>
             </div>
             <div class="header-right">
-                <button type="button" class="btn-fullscreen" id="fullscreenBtn" title="Alternar tela cheia">⛶ Tela cheia</button>
-                <a href="/" class="btn-home">Página inicial</a>
-                <button class="btn-grid" id="openDrawerBtn">▦ Slides</button>
-                <span class="connection-badge" id="connectionBadge">...</span>
+                <button type="button" class="btn-fullscreen" id="fullscreenBtn" title="Tela cheia"><span class="btn-icon">⛶</span><span class="btn-label">Tela cheia</span></button>
+                <a href="/" class="btn-home" title="Página inicial"><span class="btn-icon">🏠</span><span class="btn-label">Página inicial</span></a>
+                <button class="btn-grid" id="openDrawerBtn" title="Slides"><span class="btn-icon">▦</span><span class="btn-label">Slides</span></button>
+                <span class="connection-badge" id="connectionBadge" title="Estado da conexão">...</span>
             </div>
         </div>
 
@@ -480,11 +507,18 @@
         (function() {
             const btn = document.getElementById('fullscreenBtn');
             if (!btn) return;
+            const icon = btn.querySelector('.btn-icon');
+            const label = btn.querySelector('.btn-label');
             function toggle() {
                 if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
                 else document.exitFullscreen();
             }
-            function updateText() { btn.textContent = document.fullscreenElement ? '⛶ Sair da tela cheia' : '⛶ Tela cheia'; }
+            function updateText() {
+                const isFull = !!document.fullscreenElement;
+                if (icon) icon.textContent = isFull ? '⛶' : '⛶';
+                if (label) label.textContent = isFull ? 'Sair da tela cheia' : 'Tela cheia';
+                btn.title = isFull ? 'Sair da tela cheia' : 'Tela cheia';
+            }
             btn.addEventListener('click', toggle);
             document.addEventListener('fullscreenchange', updateText);
         })();
@@ -512,6 +546,7 @@
         socket.on('connect', () => {
             $('connectionBadge').textContent = 'Conectado';
             $('connectionBadge').className = 'connection-badge connected';
+            $('connectionBadge').title = 'Conectado';
             const host = window.location.host || '';
             if ($('remoteHint')) $('remoteHint').textContent = 'Conectado a ' + host + '. Os comandos são enviados em tempo real para o apresentador.';
         });
@@ -519,6 +554,7 @@
         socket.on('disconnect', () => {
             $('connectionBadge').textContent = 'Offline';
             $('connectionBadge').className = 'connection-badge disconnected';
+            $('connectionBadge').title = 'Offline';
         });
 
         socket.on('initialState', async (state) => {

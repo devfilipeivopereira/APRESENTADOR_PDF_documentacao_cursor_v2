@@ -11,7 +11,7 @@ Aplicação Node.js para apresentações de PDF em tempo real. PDFs no Supabase 
 - **Modo offline / backup** – no Apresentador, "Carregar PDF do computador" (PDF em `uploads/`, `UPLOAD_DIR` no `.env`); sincronização de slides na rede local
 - **Projetor** (`/view`) – tela cheia, transição suave (double-buffer)
 - **Apresentador** (`/admin`) – slide atual + preview do próximo, controles, atalhos e secção de backup local
-- **Controle remoto** (`/remote`) – uso em celular/tablet, setas e Espaço no teclado
+- **Controle remoto** (`/remote`) – uso em celular/tablet, setas e Espaço no teclado; em mobile o header mostra só ícones (tela cheia, página inicial, slides, conexão)
 - **Tela cheia** – botão em todas as telas (página inicial, Playlist, Apresentador, Controle remoto, Login, Projetor)
 - **Sincronização em tempo real** via Socket.io
 - **Acesso na rede** – links por IP para projetor e controle remoto
