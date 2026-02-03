@@ -21,6 +21,9 @@ jspm_packages/
 # Uploads directory
 uploads/
 
+# PDFs de exemplo (evitar exceder limite de 100 MB do GitHub)
+SLIDES/
+
 # Production
 build/
 dist/
