@@ -63,6 +63,12 @@
             color: #e94560;
         }
 
+        .remote-hint {
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
         .header-right {
             display: flex;
             align-items: center;
@@ -94,6 +100,18 @@
             font-size: 0.8rem;
             cursor: pointer;
         }
+
+        .btn-home {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            text-decoration: none;
+        }
+        .btn-home:hover { background: rgba(255, 255, 255, 0.15); }
 
         .slides-area {
             flex: 1;
@@ -359,8 +377,12 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Controle Remoto</h1>
+            <div>
+                <h1>Controle Remoto</h1>
+                <p class="remote-hint" id="remoteHint">Conectado ao mesmo servidor do apresentador. Use o link ou QR no Apresentador para abrir esta página noutro dispositivo.</p>
+            </div>
             <div class="header-right">
+                <a href="/" class="btn-home">Página inicial</a>
                 <button class="btn-grid" id="openDrawerBtn">▦ Slides</button>
                 <span class="connection-badge" id="connectionBadge">...</span>
             </div>
@@ -458,6 +480,8 @@
         socket.on('connect', () => {
             $('connectionBadge').textContent = 'Conectado';
             $('connectionBadge').className = 'connection-badge connected';
+            const host = window.location.host || '';
+            if ($('remoteHint')) $('remoteHint').textContent = 'Conectado a ' + host + '. Os comandos são enviados em tempo real para o apresentador.';
         });
 
         socket.on('disconnect', () => {

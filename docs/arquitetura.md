@@ -11,10 +11,8 @@ A aplicação Cursor é projetada para fornecer apresentações de PDF sincroniz
 O backend é o coração da aplicação, responsável por gerenciar o upload de PDFs, manter o estado global da apresentação e orquestrar a sincronização em tempo real entre todos os clientes conectados.
 
 *   **Node.js:** Ambiente de execução JavaScript assíncrono e orientado a eventos, ideal para aplicações de rede escaláveis.
-*   **Express.js:** Framework web minimalista e flexível para Node.js, utilizado para:
-    *   **Roteamento:** Gerenciamento das rotas HTTP (`/`, `/view`, `/admin`).
-    *   **Serviço de Arquivos Estáticos:** Servir os arquivos HTML, CSS e JavaScript do frontend.
-    *   **API de Upload:** Expor um endpoint para o upload de arquivos PDF.
+*   **Express.js:** Framework web para Node.js: rotas HTTP (`/`, `/playlist`, `/view`, `/admin`, `/remote`), arquivos estáticos, API de upload e APIs da playlist (`GET/PATCH/DELETE /api/playlist`, `POST /api/playlist/load`).
+*   **Supabase (auto-hospedado):** Storage para PDFs; tabela `presentations` para playlist (título, pdf_url, event_date, location, extra_info). O servidor usa a chave service_role para upload e CRUD.
 *   **Socket.io:** Biblioteca para comunicação bidirecional em tempo real baseada em eventos. É fundamental para:
     *   **Sincronização de Slides:** Enviar atualizações de `currentSlide` para todos os clientes instantaneamente.
     *   **Gerenciamento de Conexões:** Lidar com a entrada e saída de clientes, garantindo que novos clientes recebam o estado atual da apresentação.
@@ -27,13 +25,14 @@ O frontend consiste em duas interfaces distintas, cada uma otimizada para seu pr
 *   **Interface de Projetor (`/view`):** Tela cheia, transição suave entre slides (double-buffer).
 *   **Interface de Apresentador (`/admin`):** Slide atual e preview do próximo (double-buffer), controles e atalhos de teclado.
 *   **Controle Remoto (`/remote`):** Interface para celular/tablet na rede; swipe, menu retrátil com grade de slides (estilo Keynote).
+*   **Playlist (`/playlist`):** Tela para gerenciar apresentações: upload para Supabase Storage, metadata (data, local, informações extras), editar, excluir e iniciar apresentação (carrega o PDF na sessão atual).
 *   **PDF.js:** Renderização de PDF no navegador (elementos `canvas`).
 *   **CSS (Flexbox/Grid):** Layout responsivo (desktop, tablet, celular, iPad) e tema dark.
 *   **JavaScript (Vanilla):** Conexão Socket.io, eventos `pageUpdated`, atalhos, Fullscreen API.
 
 ## Fluxo de Dados e Comunicação
 
-1.  **Upload de PDF:** O apresentador acessa a rota `/` (ou uma interface de upload dedicada), faz o upload de um arquivo PDF. O Multer processa o arquivo, e o servidor armazena o PDF e atualiza o `pdfUrl` no estado global.
+1.  **Upload de PDF:** O apresentador acessa a rota `/` ou `/playlist`, faz o upload de um arquivo PDF. O servidor envia o PDF para o Supabase Storage, insere um registro na tabela `presentations` (playlist) com data, local e informações extras, e atualiza o estado global (`pdfUrl` = URL pública do Supabase).
 2.  **Conexão de Clientes:** Quando um cliente (seja `/view` ou `/admin`) se conecta via Socket.io, o servidor envia o estado atual (`currentSlide`, `pdfUrl`) para esse novo cliente.
 3.  **Visualização (`/view`):** O cliente `/view` recebe o `pdfUrl`, carrega o PDF com PDF.js e renderiza o `currentSlide` em tela cheia. Ele escuta por eventos `pageUpdated` para atualizar o slide.
 4.  **Controle (`/admin`):** O cliente `/admin` também recebe o estado, exibe o `currentSlide` e um preview do próximo. O apresentador interage com botões ou atalhos de teclado para mudar de página.

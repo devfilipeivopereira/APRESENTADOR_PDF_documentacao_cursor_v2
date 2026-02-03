@@ -20,11 +20,35 @@
             color: #fff;
         }
 
+        body {
+            padding-top: 52px;
+        }
+
+        /* Barra de rolagem escura */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f0f1a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2d2d44;
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3d3d5c;
+        }
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #2d2d44 #0f0f1a;
+        }
+
         .container {
             display: grid;
             grid-template-columns: 1fr 320px;
             grid-template-rows: 1fr auto;
-            height: 100%;
+            height: calc(100% - 52px);
             gap: 15px;
             padding: 15px;
         }
@@ -64,6 +88,7 @@
             flex-direction: column;
             gap: 15px;
             min-height: 0;
+            overflow-y: auto;
         }
 
         /* Preview do próximo slide */
@@ -110,6 +135,101 @@
 
         #previewCanvasB { z-index: 0; }
         #previewCanvasA { z-index: 1; }
+
+        /* Playlist na sidebar */
+        .playlist-sidebar {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 15px;
+            flex-shrink: 0;
+            max-height: 220px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .playlist-sidebar h3 {
+            font-size: 0.85rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        .playlist-list-wrap {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+            margin-bottom: 10px;
+        }
+        .playlist-list {
+            list-style: none;
+        }
+        .playlist-list li {
+            margin-bottom: 6px;
+        }
+        .playlist-item {
+            display: block;
+            width: 100%;
+            padding: 10px 12px;
+            text-align: left;
+            background: #0f0f1a;
+            border: 1px solid #2d2d44;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .playlist-item:hover {
+            background: #2d2d44;
+            border-color: #4ecdc4;
+            color: #4ecdc4;
+        }
+        .playlist-item:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+        .playlist-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .btn-playlist-refresh {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            background: #2d2d44;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-playlist-refresh:hover {
+            background: #3d3d5c;
+        }
+        .btn-playlist-manage {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            border-radius: 8px;
+            background: rgba(78, 205, 196, 0.2);
+            color: #4ecdc4;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        .btn-playlist-manage:hover {
+            background: rgba(78, 205, 196, 0.3);
+        }
+        .playlist-empty, .playlist-error {
+            font-size: 0.8rem;
+            color: #666;
+            padding: 8px 0;
+        }
+        .playlist-error { color: #e94560; }
 
         /* Info da apresentação */
         .presentation-info {
@@ -187,12 +307,13 @@
             text-align: center;
         }
 
-        /* Links de rede */
+        /* Links de rede / Controle remoto */
         .network-links {
             background: #1a1a2e;
             border-radius: 12px;
             padding: 15px;
             flex-shrink: 0;
+            overflow: visible;
         }
 
         .network-links h3 {
@@ -200,24 +321,41 @@
             color: #888;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
+        .network-url-wrap {
+            margin-bottom: 10px;
+        }
+        .network-url-label {
+            font-size: 0.7rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
         .network-url {
             background: #0f0f1a;
-            padding: 10px;
+            padding: 12px 10px;
             border-radius: 8px;
             font-family: monospace;
-            font-size: 0.85rem;
-            color: #4ecdc4;
+            font-size: 0.95rem;
+            color: #fff;
             text-align: center;
-            margin-bottom: 10px;
             word-break: break-all;
+            line-height: 1.35;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .network-url.lan {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-top: 8px;
         }
 
         .link-row {
             display: flex;
             gap: 8px;
+            margin-top: 12px;
         }
 
         .net-link {
@@ -247,11 +385,39 @@
             transform: translateY(-2px);
         }
 
+        .remote-qr-wrap {
+            text-align: center;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255,255,255,0.12);
+            min-height: 155px;
+            box-sizing: border-box;
+        }
+        .remote-qr-wrap .qr-box {
+            display: inline-block;
+            background: #fff;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+        }
+        .remote-qr-wrap img {
+            display: block;
+            width: 120px;
+            height: 120px;
+            border-radius: 4px;
+        }
+        .remote-qr-label {
+            font-size: 0.75rem;
+            color: #888;
+        }
+
         .network-hint {
             font-size: 0.7rem;
             color: #555;
             text-align: center;
-            margin-top: 8px;
+            margin-top: 10px;
+            line-height: 1.3;
         }
 
         /* Controles */
@@ -318,27 +484,47 @@
             font-size: 0.8rem;
         }
 
-        /* Status de conexão */
-        .connection-status {
+        /* Barra superior única: navegação + status */
+        .admin-header {
             position: fixed;
-            top: 15px;
-            right: 15px;
-            padding: 8px 15px;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            background: rgba(15, 15, 26, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            z-index: 1000;
+            gap: 16px;
+        }
+
+        .admin-header-nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .connection-status {
+            flex-shrink: 0;
+            padding: 8px 16px;
             border-radius: 20px;
             font-size: 0.8rem;
-            z-index: 1000;
+            font-weight: 600;
         }
 
         .connection-status.connected {
             background: rgba(46, 213, 115, 0.2);
             color: #2ed573;
-            border: 1px solid rgba(46, 213, 115, 0.3);
+            border: 1px solid rgba(46, 213, 115, 0.35);
         }
 
         .connection-status.disconnected {
             background: rgba(255, 71, 87, 0.2);
             color: #ff4757;
-            border: 1px solid rgba(255, 71, 87, 0.3);
+            border: 1px solid rgba(255, 71, 87, 0.35);
         }
 
         /* Mensagem de espera */
@@ -367,24 +553,22 @@
             text-decoration: underline;
         }
 
-        /* Link para upload */
-        .upload-link {
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            padding: 8px 15px;
-            background: rgba(233, 69, 96, 0.2);
-            border: 1px solid rgba(233, 69, 96, 0.3);
-            border-radius: 20px;
-            color: #e94560;
+        .top-nav-link {
+            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            color: #fff;
             text-decoration: none;
-            font-size: 0.85rem;
-            transition: all 0.3s ease;
-            z-index: 1000;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
         }
 
-        .upload-link:hover {
-            background: rgba(233, 69, 96, 0.3);
+        .top-nav-link:hover {
+            background: rgba(233, 69, 96, 0.15);
+            border-color: rgba(233, 69, 96, 0.3);
+            color: #e94560;
         }
 
         /* Responsividade */
@@ -428,7 +612,17 @@
         }
 
         @media (max-width: 600px) {
+            .admin-header {
+                padding: 0 12px;
+                height: 48px;
+            }
+            .top-nav-link {
+                padding: 8px 14px;
+                font-size: 0.85rem;
+            }
+            body { padding-top: 48px; }
             .container {
+                height: calc(100% - 48px);
                 padding: 10px;
                 gap: 10px;
             }
@@ -463,11 +657,13 @@
     </style>
 </head>
 <body>
-    <a href="/" class="upload-link">+ Novo PDF</a>
-    
-    <div class="connection-status" id="connectionStatus">
-        Conectando...
-    </div>
+    <header class="admin-header">
+        <nav class="admin-header-nav">
+            <a href="/" class="top-nav-link">Tela inicial</a>
+            <a href="/playlist" class="top-nav-link">Playlist</a>
+        </nav>
+        <div class="connection-status" id="connectionStatus">Conectando...</div>
+    </header>
 
     <div class="container">
         <!-- Slide principal -->
@@ -490,6 +686,20 @@
                 </div>
             </div>
 
+            <!-- Playlist: selecionar apresentação -->
+            <div class="playlist-sidebar">
+                <h3>Playlist</h3>
+                <div class="playlist-list-wrap">
+                    <ul class="playlist-list" id="playlistList"></ul>
+                    <p class="playlist-empty" id="playlistEmpty">Nenhuma apresentação na playlist.</p>
+                    <p class="playlist-error" id="playlistError" style="display:none;">Erro ao carregar.</p>
+                </div>
+                <div class="playlist-actions">
+                    <button type="button" class="btn-playlist-refresh" id="playlistRefresh">Atualizar</button>
+                    <a href="/playlist" class="btn-playlist-manage">Gerir Playlist</a>
+                </div>
+            </div>
+
             <div class="presentation-info">
                 <div class="file-name" id="fileName">-</div>
                 <div class="slide-counter">
@@ -506,13 +716,26 @@
             </div>
 
             <div class="network-links" id="networkLinks">
-                <h3>Acesso na Rede</h3>
-                <div class="network-url" id="networkUrl">Carregando...</div>
+                <h3>Controle remoto (online ou rede)</h3>
+                <div class="network-url-wrap">
+                    <div class="network-url-label">Link para controle remoto</div>
+                    <div class="network-url" id="networkUrl">Carregando...</div>
+                </div>
+                <div class="network-url-wrap" id="networkLanWrap" style="display: none;">
+                    <div class="network-url-label">Rede local (opcional)</div>
+                    <div class="network-url lan" id="networkLanUrl"></div>
+                </div>
                 <div class="link-row">
-                    <a href="#" id="linkRemote" class="net-link remote" target="_blank">📱 Controle Remoto</a>
+                    <a href="#" id="linkRemote" class="net-link remote" target="_blank">📱 Abrir Controle Remoto</a>
                     <a href="#" id="linkView" class="net-link view" target="_blank">🖥️ Projetor</a>
                 </div>
-                <p class="network-hint">Use estes links em outros dispositivos da rede</p>
+                <div class="remote-qr-wrap" id="remoteQrWrap" style="display: none;">
+                    <div class="qr-box">
+                        <img id="remoteQrImg" alt="QR Controle Remoto" width="120" height="120">
+                    </div>
+                    <div class="remote-qr-label">Escaneie para abrir no telemóvel</div>
+                </div>
+                <p class="network-hint">Abra o link noutro dispositivo (telemóvel, tablet ou PC) para controlar a apresentação à distância</p>
             </div>
         </div>
 
@@ -548,18 +771,42 @@
     <script src="/js/admin.js?v=9"></script>
     
     <script>
-        // Carregar informações de rede
+        // URL base: BASE_URL no servidor (para VPS/proxy) ou o mesmo endereço desta página (funciona online e na rede)
         async function loadNetworkInfo() {
+            const networkUrlEl = document.getElementById('networkUrl');
+            const networkLanWrap = document.getElementById('networkLanWrap');
+            const networkLanUrlEl = document.getElementById('networkLanUrl');
+            const linkRemote = document.getElementById('linkRemote');
+            const linkView = document.getElementById('linkView');
+            const qrWrap = document.getElementById('remoteQrWrap');
+            const qrImg = document.getElementById('remoteQrImg');
             try {
-                const response = await fetch('/api/network');
-                const data = await response.json();
-                const baseUrl = `http://${data.ip}:${data.port}`;
-                
-                document.getElementById('networkUrl').textContent = baseUrl;
-                document.getElementById('linkRemote').href = `${baseUrl}/remote`;
-                document.getElementById('linkView').href = `${baseUrl}/view`;
-            } catch (error) {
-                console.log('Erro ao carregar info de rede');
+                let baseUrl = window.location.origin;
+                try {
+                    const baseRes = await fetch('/api/base-url');
+                    const baseData = await baseRes.json();
+                    if (baseData.baseUrl) baseUrl = baseData.baseUrl.replace(/\/$/, '');
+                } catch (_) {}
+                const remoteUrl = baseUrl + '/remote';
+                const viewUrl = baseUrl + '/view';
+                linkRemote.href = remoteUrl;
+                linkView.href = viewUrl;
+                networkUrlEl.textContent = baseUrl + '/remote';
+                networkUrlEl.title = 'Copie este link para abrir no outro dispositivo';
+                qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(remoteUrl);
+                qrWrap.style.display = 'block';
+                try {
+                    const netRes = await fetch('/api/network');
+                    const net = await netRes.json();
+                    const lanUrl = 'http://' + net.ip + ':' + net.port;
+                    if (lanUrl !== baseUrl && !baseUrl.startsWith('http://' + net.ip)) {
+                        networkLanUrlEl.textContent = lanUrl + '/remote';
+                        networkLanWrap.style.display = 'block';
+                    }
+                } catch (_) {}
+            } catch (e) {
+                networkUrlEl.textContent = 'Erro ao carregar';
+                console.log('Erro ao carregar info de rede', e);
             }
         }
         loadNetworkInfo();

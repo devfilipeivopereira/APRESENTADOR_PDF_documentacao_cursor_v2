@@ -17,6 +17,10 @@ const nextBtn = document.getElementById('nextBtn');
 const mainSlide = document.getElementById('mainSlide');
 const openViewBtn = document.getElementById('openViewBtn');
 const previewSlideContainer = document.getElementById('previewSlideContainer');
+const playlistList = document.getElementById('playlistList');
+const playlistEmpty = document.getElementById('playlistEmpty');
+const playlistError = document.getElementById('playlistError');
+const playlistRefresh = document.getElementById('playlistRefresh');
 
 // Double-buffer: slide principal e preview sem piscar
 let displayedCanvas = currentCanvasA;
@@ -90,6 +94,64 @@ socket.on('stateUpdated', (state) => {
         updateUI();
     }
 });
+
+// --- Playlist: listar e carregar apresentações ---
+async function loadPlaylist() {
+    if (!playlistList) return;
+    playlistEmpty.style.display = 'none';
+    playlistError.style.display = 'none';
+    playlistList.innerHTML = '';
+    try {
+        const res = await fetch('/api/playlist');
+        if (!res.ok) throw new Error(res.statusText || 'Erro ao carregar');
+        const items = await res.json();
+        if (!items || items.length === 0) {
+            playlistEmpty.style.display = 'block';
+            return;
+        }
+        items.forEach((p) => {
+            const li = document.createElement('li');
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'playlist-item';
+            btn.dataset.id = p.id;
+            btn.textContent = p.title || p.file_name || 'Sem título';
+            btn.title = p.event_date ? `${p.title || ''} – ${p.event_date}` : (p.title || '');
+            btn.addEventListener('click', () => loadPresentationFromPlaylist(p.id));
+            li.appendChild(btn);
+            playlistList.appendChild(li);
+        });
+    } catch (err) {
+        console.error('Playlist:', err);
+        playlistError.textContent = err.message || 'Erro ao carregar.';
+        playlistError.style.display = 'block';
+    }
+}
+
+async function loadPresentationFromPlaylist(id) {
+    const buttons = playlistList.querySelectorAll('.playlist-item');
+    buttons.forEach((b) => { b.disabled = true; });
+    try {
+        const res = await fetch('/api/playlist/load', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        });
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || res.statusText || 'Erro ao carregar');
+        }
+        // pdfLoaded será emitido pelo servidor; admin já escuta e chama loadPDF
+    } catch (err) {
+        console.error('Load playlist:', err);
+        alert(err.message || 'Erro ao carregar apresentação.');
+    } finally {
+        buttons.forEach((b) => { b.disabled = false; });
+    }
+}
+
+if (playlistRefresh) playlistRefresh.addEventListener('click', loadPlaylist);
+loadPlaylist();
 
 async function loadPDF(url, fileName) {
     try {

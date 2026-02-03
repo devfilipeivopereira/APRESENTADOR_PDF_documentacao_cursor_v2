@@ -6,7 +6,8 @@ A Aplicação Cursor é uma solução inovadora para realizar apresentações de
 
 ## Funcionalidades Principais
 
-*   **Upload de PDF:** Permite o upload de arquivos PDF para serem utilizados como apresentações.
+*   **Playlist (`/playlist`):** Tela para gerenciar apresentações: upload de PDF para Supabase Storage, cadastro com data, local e informações extras; editar, excluir e iniciar apresentação.
+*   **Upload de PDF:** Permite o upload de arquivos PDF (gravados no Supabase Storage e na tabela de playlist).
 *   **Sincronização em Tempo Real:** Garante que todos os dispositivos conectados exibam o mesmo slide simultaneamente.
 *   **Interface de Projetor (`/view`):** Tela limpa e em tela cheia, ideal para projetores. Transição suave entre slides (double-buffer, sem piscar).
 *   **Interface de Apresentador (`/admin`):** Painel de controle com slide atual, preview do próximo (também com double-buffer), botões de navegação e atalhos de teclado.
@@ -22,6 +23,10 @@ Esta pasta `/docs` contém a documentação completa do projeto, organizada nos 
 *   [`tecnologias.md`](./tecnologias.md): Tecnologias utilizadas (Node.js, Express, Socket.io, PDF.js).
 *   [`fluxo.md`](./fluxo.md): Fluxo de execução, da inicialização à sincronização dos slides.
 *   [`comunicacao_rede_seguranca.md`](./comunicacao_rede_seguranca.md): Rede, portas e segurança.
+*   [`supabase-setup.md`](./supabase-setup.md): Configuração do Supabase (bucket e tabela `presentations`) na VPS.
+*   **[`deploy-do-zero.md`](./deploy-do-zero.md):** Deploy na VPS do zero (Node, projeto, .env, PM2, Nginx, HTTPS).
+*   [`deploy-vps.md`](./deploy-vps.md): Deploy na VPS – guia detalhado.
+*   [`deploy-checklist.md`](./deploy-checklist.md): Checklist rápido de deploy.
 
 ### Arquivos de Configuração Essenciais
 

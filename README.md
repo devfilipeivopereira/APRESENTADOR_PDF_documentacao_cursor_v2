@@ -1,10 +1,11 @@
-# Apresentador PDF – Sincronizado em Rede
+# Apresentador PDF – VPS + Supabase
 
-Aplicação Node.js para apresentações de PDF em tempo real na rede local. Controle pelo computador ou celular/tablet; exibição no projetor sem piscar (estilo PowerPoint/Keynote).
+Aplicação Node.js para apresentações de PDF em tempo real. PDFs no Supabase Storage; playlist com data, local e informações extras; roda na VPS Ubuntu (sem Nginx). Controle pelo computador ou celular/tablet; exibição no projetor sem piscar (estilo PowerPoint/Keynote).
 
 ## Funcionalidades
 
-- **Upload de PDF** na página inicial
+- **Playlist** (`/playlist`) – minhas apresentações: upload de PDF para Supabase Storage, data, local, informações extras; editar, excluir, iniciar apresentação
+- **Upload de PDF** na página inicial ou na playlist (grava no Supabase e na playlist)
 - **Projetor** (`/view`) – tela cheia, transição suave (double-buffer)
 - **Apresentador** (`/admin`) – slide atual + preview do próximo, controles e atalhos
 - **Controle remoto** (`/remote`) – uso em celular/tablet, swipe, menu de slides (estilo Keynote)
@@ -40,10 +41,11 @@ O servidor inicia na porta 3000 e exibe o IP da rede no console.
 
 ## Uso
 
-1. **Upload** – Acesse `http://IP:3000`, faça upload do PDF.
-2. **Apresentador** – `http://IP:3000/admin` (slide atual, próximo, navegação, atalhos).
-3. **Projetor** – `http://IP:3000/view` (tela cheia, ideal para projetor).
-4. **Controle remoto** – `http://IP:3000/remote` (celular/tablet na mesma rede).
+1. **Playlist** – `http://IP:3000/playlist` para adicionar apresentações (PDF + data, local, extras), editar, excluir e iniciar.
+2. **Upload** – Na página inicial ou na playlist: envie o PDF (grava no Supabase e na playlist).
+3. **Apresentador** – `http://IP:3000/admin` (slide atual, próximo, navegação, atalhos).
+4. **Projetor** – `http://IP:3000/view` (tela cheia, ideal para projetor).
+5. **Controle remoto** – `http://IP:3000/remote` (celular/tablet na mesma rede).
 
 ### Atalhos (Apresentador)
 
@@ -53,19 +55,19 @@ O servidor inicia na porta 3000 e exibe o IP da rede no console.
 ## Estrutura do projeto
 
 ```
-├── server.js           # Servidor Express + Socket.io
+├── server.js           # Servidor Express + Socket.io + Supabase
 ├── package.json
-├── .env.example        # Exemplo: PORT, UPLOAD_DIR
+├── .env.example        # PORT, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 ├── public/
 │   ├── index.html      # Menu + upload
-│   ├── admin.html      # Apresentador
-│   ├── view.html       # Projetor
-│   ├── remote.html     # Controle remoto
+│   ├── playlist.html  # Playlist (data, local, extras)
+│   ├── admin.html     # Apresentador
+│   ├── view.html      # Projetor
+│   ├── remote.html    # Controle remoto
 │   └── js/
 │       ├── admin.js
 │       └── view.js
-├── uploads/            # PDFs enviados (criado automaticamente)
-└── docs/               # Documentação detalhada
+└── docs/               # Documentação (incl. supabase-setup.md)
 ```
 
 ## Documentação
@@ -81,10 +83,29 @@ Documentação completa em **[docs/](docs/)**:
 
 ## Configuração
 
-Copie `.env.example` para `.env` e ajuste se necessário:
+1. Copie `.env.example` para `.env`.
+2. Configure o Supabase (VPS auto-hospedado): crie o bucket e a tabela conforme [docs/supabase-setup.md](docs/supabase-setup.md).
+3. No `.env`:
+   - `PORT` – porta do servidor (padrão: 3000)
+   - `SUPABASE_URL` – URL do Supabase na VPS
+   - `SUPABASE_SERVICE_ROLE_KEY` – chave service_role do Supabase
+   - `SUPABASE_BUCKET` – (opcional) nome do bucket; padrão: `presentations`
 
-- `PORT` – porta do servidor (padrão: 3000)
-- `UPLOAD_DIR` – pasta dos PDFs (padrão: `./uploads`)
+## Deploy na VPS (Ubuntu)
+
+Sem Nginx: o Node serve o frontend e as APIs.
+
+```bash
+git clone <URL_DO_REPO>
+cd <nome_do_repo>
+npm install
+cp .env.example .env
+# Edite .env com SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY
+npm start
+# Ou com PM2: pm2 start server.js --name apresentador-pdf
+```
+
+Acesso: `http://IP_DA_VPS:3000`.
 
 ## Licença
 

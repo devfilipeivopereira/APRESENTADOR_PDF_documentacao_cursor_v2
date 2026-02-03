@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playlist - Apresentador PDF</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 {
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle { color: #888; margin-bottom: 24px; font-size: 0.95rem; }
+        .back-link {
+            display: inline-block;
+            color: #4ecdc4;
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        .back-link:hover { text-decoration: underline; }
+        .section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .section h2 { font-size: 1.1rem; color: #e94560; margin-bottom: 16px; }
+        .form-grid {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: 1fr 1fr;
+        }
+        @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+        label { display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 4px; }
+        input, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #2d2d44;
+            background: #0f0f1a;
+            color: #fff;
+            font-size: 0.95rem;
+        }
+        textarea { min-height: 80px; resize: vertical; }
+        input[type="file"] { padding: 8px; }
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            color: white;
+        }
+        .btn-primary:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-small { padding: 6px 12px; font-size: 0.8rem; }
+        .btn-load { background: #4ecdc4; color: #1a1a2e; }
+        .btn-edit { background: #667eea; color: white; }
+        .btn-delete { background: #ff4757; color: white; }
+        .list { list-style: none; }
+        .list li {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .list-info { flex: 1; min-width: 200px; }
+        .list-title { font-weight: 600; color: #fff; margin-bottom: 4px; }
+        .list-meta { font-size: 0.85rem; color: #888; }
+        .list-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .status { padding: 10px; border-radius: 8px; margin-top: 12px; font-size: 0.9rem; display: none; }
+        .status.success { display: block; background: rgba(46,213,115,0.2); color: #2ed573; }
+        .status.error { display: block; background: rgba(255,71,87,0.2); color: #ff4757; }
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 480px;
+            width: 100%;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .modal h3 { margin-bottom: 16px; color: #e94560; }
+        .modal .form-grid { margin-bottom: 16px; }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+        .empty { text-align: center; color: #666; padding: 40px 20px; }
+        .btn-details { background: #2d2d44; color: #fff; }
+        .btn-details:hover { background: #3d3d5c; }
+        .detail-row { margin-bottom: 12px; font-size: 0.95rem; }
+        .detail-label { color: #888; font-size: 0.8rem; margin-bottom: 2px; }
+        .detail-value { color: #fff; word-break: break-all; }
+        .detail-value a { color: #4ecdc4; text-decoration: none; }
+        .detail-value a:hover { text-decoration: underline; }
+        .detail-filesize { color: #888; font-size: 0.9em; }
+        .list-filesize { color: #888; font-size: 0.85em; font-weight: normal; }
+        .date-field-wrap { display: flex; gap: 8px; align-items: center; }
+        .date-field-wrap input { flex: 1; min-width: 0; }
+        .btn-today {
+            flex-shrink: 0;
+            padding: 8px 12px;
+            border: 1px solid rgba(78, 205, 196, 0.4);
+            border-radius: 8px;
+            background: rgba(78, 205, 196, 0.15);
+            color: #4ecdc4;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-today:hover { background: rgba(78, 205, 196, 0.25); }
+        .progress-wrap { margin: 16px 0 0; display: none; }
+        .progress-wrap.visible { display: block; }
+        .progress-label { font-size: 0.9rem; color: rgba(255,255,255,0.8); margin-bottom: 8px; text-align: center; }
+        .progress-bar { width: 100%; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #e94560, #ff6b6b); width: 0%; transition: width 0.25s ease; }
+        .progress-wrap.success .progress-label { color: #2ed573; }
+        .progress-wrap.success .progress-fill { background: #2ed573; }
+        .status-link { color: #4ecdc4; text-decoration: none; font-weight: 600; }
+        .status-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link">← Voltar ao menu</a>
+        <h1>Playlist</h1>
+        <p class="subtitle">Minhas apresentações – data, local e informações extras</p>
+
+        <div class="section">
+            <h2>Nova apresentação</h2>
+            <form id="formNew">
+                <div class="form-grid">
+                    <div>
+                        <label>PDF *</label>
+                        <input type="file" name="pdf" accept=".pdf,application/pdf" required>
+                    </div>
+                    <div>
+                        <label>Título</label>
+                        <input type="text" name="title" placeholder="Nome da apresentação">
+                    </div>
+                    <div>
+                        <label>Pregador</label>
+                        <input type="text" name="pregador" placeholder="Ex: Pr. João Silva" value="Pr. Filipe">
+                    </div>
+                    <div>
+                        <label>Data do evento</label>
+                        <div class="date-field-wrap">
+                            <input type="date" name="event_date" id="newEventDate" title="Clique para escolher ou use Hoje">
+                            <button type="button" class="btn-today" data-target="newEventDate" title="Definir como hoje">Hoje</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label>Local</label>
+                        <input type="text" name="location" placeholder="Ex: Igreja Central" value="IFC">
+                    </div>
+                </div>
+                <div style="margin-top: 12px;">
+                    <label>Informações extras</label>
+                    <textarea name="extra_info" placeholder="Observações, tema, etc."></textarea>
+                </div>
+                <div class="progress-wrap" id="playlistProgressWrap">
+                    <div class="progress-label" id="playlistProgressLabel">Enviando... 0%</div>
+                    <div class="progress-bar" id="playlistProgressBar">
+                        <div class="progress-fill" id="playlistProgressFill"></div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" id="formNewSubmit" style="margin-top: 16px;">Adicionar à playlist</button>
+            </form>
+            <div id="formStatus" class="status"></div>
+        </div>
+
+        <div class="section">
+            <h2>Apresentações</h2>
+            <ul id="playlistList" class="list">
+                <li class="empty">Carregando...</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="detailOverlay" class="modal-overlay">
+        <div class="modal">
+            <h3>Detalhes da apresentação</h3>
+            <div id="detailContent"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn" id="detailClose">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalOverlay" class="modal-overlay">
+        <div class="modal">
+            <h3>Editar apresentação</h3>
+            <form id="formEdit">
+                <input type="hidden" name="id" id="editId">
+                <div class="form-grid">
+                    <div>
+                        <label>Título</label>
+                        <input type="text" name="title" id="editTitle" required>
+                    </div>
+                    <div>
+                        <label>Pregador</label>
+                        <input type="text" name="pregador" id="editPregador" placeholder="Ex: Pr. João Silva">
+                    </div>
+                    <div>
+                        <label>Data do evento</label>
+                        <div class="date-field-wrap">
+                            <input type="date" name="event_date" id="editEventDate" title="Clique para escolher ou use Hoje">
+                            <button type="button" class="btn-today" data-target="editEventDate" title="Definir como hoje">Hoje</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label>Local</label>
+                        <input type="text" name="location" id="editLocation">
+                    </div>
+                </div>
+                <div style="margin-top: 12px;">
+                    <label>Informações extras</label>
+                    <textarea name="extra_info" id="editExtraInfo"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" id="modalCancel">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const playlistList = document.getElementById('playlistList');
+        const formNew = document.getElementById('formNew');
+        const formStatus = document.getElementById('formStatus');
+        const formEdit = document.getElementById('formEdit');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const editId = document.getElementById('editId');
+        const editTitle = document.getElementById('editTitle');
+        const editEventDate = document.getElementById('editEventDate');
+        const editLocation = document.getElementById('editLocation');
+        const editPregador = document.getElementById('editPregador');
+        const editExtraInfo = document.getElementById('editExtraInfo');
+        const modalCancel = document.getElementById('modalCancel');
+        const detailOverlay = document.getElementById('detailOverlay');
+        const detailContent = document.getElementById('detailContent');
+        const detailClose = document.getElementById('detailClose');
+
+        let lastUploadedFileSize = null;
+
+        function showStatus(el, message, isError) {
+            el.textContent = message;
+            el.className = 'status ' + (isError ? 'error' : 'success');
+            el.style.display = 'block';
+        }
+
+        async function loadPlaylist() {
+            try {
+                const res = await fetch('/api/playlist');
+                if (!res.ok) throw new Error('Erro ao carregar playlist');
+                let data = await res.json();
+                if (!Array.isArray(data)) data = [];
+                if (lastUploadedFileSize) {
+                    data = data.map(p => ({
+                        ...p,
+                        file_size: (p.file_size != null && p.file_size !== '') ? p.file_size : (p.id === lastUploadedFileSize.id ? lastUploadedFileSize.file_size : p.file_size)
+                    }));
+                }
+                renderList(data);
+            } catch (e) {
+                playlistList.innerHTML = '<li class="empty">Erro ao carregar. Verifique se o Supabase está configurado.</li>';
+            }
+        }
+
+        function formatDate(d) {
+            if (!d) return '–';
+            const x = new Date(d);
+            return isNaN(x.getTime()) ? d : x.toLocaleDateString('pt-BR');
+        }
+
+        function formatFileSize(bytes) {
+            const n = Number(bytes);
+            if (bytes == null || bytes === '' || isNaN(n) || n < 0) return '';
+            if (n < 1024) return n + ' bytes';
+            if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+            return (n / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function hasFileSize(p) {
+            if (p == null) return false;
+            const n = Number(p.file_size);
+            return p.file_size != null && p.file_size !== '' && !isNaN(n) && n >= 0;
+        }
+
+        function getFileSizeDisplay(p) {
+            return hasFileSize(p) ? formatFileSize(p.file_size) : '—';
+        }
+
+        function renderList(items) {
+            if (items.length === 0) {
+                playlistList.innerHTML = '<li class="empty">Nenhuma apresentação na playlist. Adicione acima.</li>';
+                return;
+            }
+            playlistList.innerHTML = items.map(p => `
+                <li>
+                    <div class="list-info">
+                        <div class="list-title">${escapeHtml(p.title || p.file_name || 'Sem título')} <span class="list-filesize">(${getFileSizeDisplay(p)})</span></div>
+                        <div class="list-meta">
+                            ${p.pregador ? escapeHtml(p.pregador) + ' · ' : ''}
+                            ${formatDate(p.event_date)} ${p.location ? ' · ' + escapeHtml(p.location) : ''}
+                            ${p.extra_info ? ' · ' + escapeHtml(String(p.extra_info).slice(0, 50)) + (p.extra_info.length > 50 ? '…' : '') : ''}
+                        </div>
+                    </div>
+                    <div class="list-actions">
+                        <button type="button" class="btn btn-small btn-details" data-id="${p.id}" data-action="details">Detalhes</button>
+                        <button type="button" class="btn btn-small btn-load" data-id="${p.id}" data-action="load">Iniciar</button>
+                        <button type="button" class="btn btn-small btn-edit" data-id="${p.id}" data-action="edit">Editar</button>
+                        <button type="button" class="btn btn-small btn-delete" data-id="${p.id}" data-action="delete">Excluir</button>
+                    </div>
+                </li>
+            `).join('');
+            playlistList.querySelectorAll('[data-action]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.id;
+                    const p = items.find(x => x.id === id);
+                    if (btn.dataset.action === 'load') loadPresentation(id);
+                    else if (btn.dataset.action === 'edit') openEdit(id, p);
+                    else if (btn.dataset.action === 'delete') deletePresentation(id);
+                    else if (btn.dataset.action === 'details') openDetails(p);
+                });
+            });
+        }
+
+        function openDetails(p) {
+            if (!p) return;
+            const created = p.created_at ? new Date(p.created_at).toLocaleString('pt-BR') : '–';
+            const fileName = p.file_name ? escapeHtml(p.file_name) : '–';
+            const fileSizeDisplay = getFileSizeDisplay(p);
+            detailContent.innerHTML = `
+                <div class="detail-row"><div class="detail-label">Título</div><div class="detail-value">${escapeHtml(p.title || p.file_name || '–')}</div></div>
+                <div class="detail-row"><div class="detail-label">Pregador</div><div class="detail-value">${escapeHtml(p.pregador || '–')}</div></div>
+                <div class="detail-row"><div class="detail-label">Data do evento</div><div class="detail-value">${formatDate(p.event_date)}</div></div>
+                <div class="detail-row"><div class="detail-label">Local</div><div class="detail-value">${escapeHtml(p.location || '–')}</div></div>
+                <div class="detail-row"><div class="detail-label">Informações extras</div><div class="detail-value">${escapeHtml(p.extra_info || '–')}</div></div>
+                <div class="detail-row"><div class="detail-label">Nome do ficheiro</div><div class="detail-value">${fileName}</div></div>
+                <div class="detail-row"><div class="detail-label">Tamanho do ficheiro</div><div class="detail-value">${fileSizeDisplay}</div></div>
+                <div class="detail-row"><div class="detail-label">Data de cadastro</div><div class="detail-value">${created}</div></div>
+                ${p.pdf_url ? '<div class="detail-row"><div class="detail-label">Link do PDF</div><div class="detail-value"><a href="' + escapeHtml(p.pdf_url) + '" target="_blank" rel="noopener">Abrir PDF</a></div></div>' : ''}
+            `;
+            detailOverlay.classList.add('open');
+        }
+
+        detailClose.addEventListener('click', () => detailOverlay.classList.remove('open'));
+        detailOverlay.addEventListener('click', (e) => { if (e.target === detailOverlay) detailOverlay.classList.remove('open'); });
+
+        function escapeHtml(s) {
+            const div = document.createElement('div');
+            div.textContent = s;
+            return div.innerHTML;
+        }
+
+        const playlistProgressWrap = document.getElementById('playlistProgressWrap');
+        const playlistProgressLabel = document.getElementById('playlistProgressLabel');
+        const playlistProgressFill = document.getElementById('playlistProgressFill');
+        const formNewSubmit = document.getElementById('formNewSubmit');
+
+        formNew.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const fd = new FormData(formNew);
+            const file = fd.get('pdf');
+            if (!file || file.size === 0) {
+                showStatus(formStatus, 'Selecione um PDF.', true);
+                return;
+            }
+            formStatus.style.display = 'none';
+            formNewSubmit.disabled = true;
+            formNewSubmit.textContent = 'Enviando...';
+            playlistProgressWrap.classList.add('visible');
+            playlistProgressWrap.classList.remove('success');
+            playlistProgressLabel.textContent = 'Enviando... 0%';
+            playlistProgressFill.style.width = '0%';
+
+            const xhr = new XMLHttpRequest();
+            xhr.upload.addEventListener('progress', (ev) => {
+                if (ev.lengthComputable) {
+                    const pct = Math.round((ev.loaded / ev.total) * 100);
+                    playlistProgressFill.style.width = pct + '%';
+                    playlistProgressLabel.textContent = 'Enviando... ' + pct + '%';
+                }
+            });
+            xhr.addEventListener('load', () => {
+                playlistProgressFill.style.width = '100%';
+                formNewSubmit.disabled = false;
+                formNewSubmit.textContent = 'Adicionar à playlist';
+                playlistProgressWrap.classList.remove('visible');
+                if (xhr.status === 200) {
+                    playlistProgressWrap.classList.add('success');
+                    playlistProgressLabel.textContent = 'Carregado na base de dados com sucesso.';
+                    playlistProgressWrap.classList.add('visible');
+                    let resp = {};
+                    try { resp = JSON.parse(xhr.responseText); } catch (_) {}
+                    if (resp.id) {
+                        lastUploadedFileSize = { id: resp.id, file_size: resp.file_size };
+                    }
+                    const sizeStr = (resp.file_size != null && resp.file_size !== '') ? ' (' + formatFileSize(resp.file_size) + ')' : '';
+                    formStatus.innerHTML = '<strong>Ficheiro carregado com sucesso na base de dados.</strong>' + sizeStr +
+                        (resp.id ? '<br><span style="font-size:0.85rem;color:rgba(255,255,255,0.7)">Registo: ' + resp.id + '</span>' : '') +
+                        '<br><br><a href="/admin" class="status-link">Ir para Apresentador</a> &nbsp;|&nbsp; <a href="/playlist" class="status-link">Ver Playlist</a>';
+                    formStatus.className = 'status success';
+                    formStatus.style.display = 'block';
+                    formNew.reset();
+                    formNew.querySelector('[name="pregador"]').value = 'Pr. Filipe';
+                    formNew.querySelector('[name="location"]').value = 'IFC';
+                    loadPlaylist();
+                    setTimeout(() => { playlistProgressWrap.classList.remove('visible'); }, 2500);
+                } else {
+                    let msg = 'Erro ao enviar.';
+                    try {
+                        const err = JSON.parse(xhr.responseText);
+                        msg = err.error || msg;
+                    } catch (_) {}
+                    showStatus(formStatus, msg, true);
+                }
+            });
+            xhr.addEventListener('error', () => {
+                formNewSubmit.disabled = false;
+                formNewSubmit.textContent = 'Adicionar à playlist';
+                playlistProgressWrap.classList.remove('visible');
+                showStatus(formStatus, 'Erro de conexão. Tente novamente.', true);
+            });
+            xhr.open('POST', '/upload');
+            xhr.send(fd);
+        });
+
+        async function loadPresentation(id) {
+            try {
+                const res = await fetch('/api/playlist/load', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.error || res.statusText);
+                window.location.href = '/admin';
+            } catch (err) {
+                showStatus(formStatus, err.message || 'Erro ao carregar.', true);
+            }
+        }
+
+        function openEdit(id, p) {
+            if (!p) return;
+            editId.value = id;
+            editTitle.value = p.title || '';
+            if (editPregador) editPregador.value = p.pregador || '';
+            editEventDate.value = p.event_date ? p.event_date.slice(0, 10) : '';
+            editLocation.value = p.location || '';
+            editExtraInfo.value = p.extra_info || '';
+            modalOverlay.classList.add('open');
+        }
+
+        modalCancel.addEventListener('click', () => modalOverlay.classList.remove('open'));
+        modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) modalOverlay.classList.remove('open'); });
+
+        formEdit.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = editId.value;
+            try {
+                const res = await fetch('/api/playlist/' + id, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: editTitle.value,
+                        pregador: editPregador ? editPregador.value || null : null,
+                        event_date: editEventDate.value || null,
+                        location: editLocation.value || null,
+                        extra_info: editExtraInfo.value || null
+                    })
+                });
+                if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || res.statusText);
+                modalOverlay.classList.remove('open');
+                loadPlaylist();
+            } catch (err) {
+                alert(err.message || 'Erro ao salvar.');
+            }
+        });
+
+        async function deletePresentation(id) {
+            if (!confirm('Excluir esta apresentação da playlist?')) return;
+            try {
+                const res = await fetch('/api/playlist/' + id, { method: 'DELETE' });
+                if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || res.statusText);
+                loadPlaylist();
+            } catch (err) {
+                alert(err.message || 'Erro ao excluir.');
+            }
+        }
+
+        document.querySelectorAll('.btn-today').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-target');
+                const input = id ? document.getElementById(id) : null;
+                if (input) input.value = new Date().toISOString().slice(0, 10);
+            });
+        });
+
+        function openDatePicker(input) {
+            if (input && input.showPicker) input.showPicker();
+        }
+        document.getElementById('newEventDate')?.addEventListener('click', function() { openDatePicker(this); });
+        document.getElementById('editEventDate')?.addEventListener('click', function() { openDatePicker(this); });
+
+        loadPlaylist();
+    </script>
+</body>
+</html>

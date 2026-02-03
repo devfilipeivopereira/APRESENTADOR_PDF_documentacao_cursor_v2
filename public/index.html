@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cursor - Apresentações de PDF</title>
+    <title>Apresentações de PDF Remotas Online</title>
     <style>
         * {
             margin: 0;
@@ -19,15 +19,15 @@
             justify-content: center;
             align-items: center;
             color: #ffffff;
-            padding: 20px;
+            padding: 16px;
         }
 
         .container {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
             border-radius: 20px;
-            padding: 40px;
-            max-width: 550px;
+            padding: 32px;
+            max-width: 560px;
             width: 100%;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -66,7 +66,7 @@
 
         .menu-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 12px;
         }
 
@@ -275,68 +275,229 @@
             color: #ff4757;
         }
 
-        .progress-bar {
-            width: 100%;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            margin-top: 15px;
-            overflow: hidden;
+        .status-link {
+            color: #4ecdc4;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .status-link:hover {
+            text-decoration: underline;
+        }
+
+        .status-id { font-size: 0.85rem; color: rgba(255,255,255,0.7); }
+        .status-size { font-size: 0.9rem; color: rgba(255,255,255,0.85); display: block; margin-top: 4px; }
+
+        .server-status {
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.2);
+        }
+        .server-status.ok { color: #2ed573; }
+        .server-status.err { color: #ff4757; }
+
+        .progress-wrap {
+            margin: 15px 0;
             display: none;
         }
 
-        .progress-bar.visible {
+        .progress-wrap.visible {
             display: block;
+        }
+
+        .progress-label {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
         }
 
         .progress-fill {
             height: 100%;
             background: linear-gradient(90deg, #e94560, #ff6b6b);
             width: 0%;
-            transition: width 0.3s ease;
+            transition: width 0.25s ease;
         }
 
-        @media (max-width: 500px) {
+        .progress-wrap.success .progress-label { color: #2ed573; }
+        .progress-wrap.success .progress-fill { background: #2ed573; }
+
+        .upload-section-desc {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .form-fields {
+            margin: 15px 0;
+        }
+
+        .form-group {
+            margin-bottom: 0;
+        }
+
+        .form-group .form-input:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            margin-bottom: 0;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            background: rgba(0,0,0,0.2);
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .form-input::placeholder {
+            color: #666;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #e94560;
+        }
+
+        .date-field-wrap {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .date-field-wrap .form-input { flex: 1; margin-bottom: 0; min-width: 0; }
+        .btn-today {
+            flex-shrink: 0;
+            padding: 10px 14px;
+            border: 1px solid rgba(78, 205, 196, 0.4);
+            border-radius: 8px;
+            background: rgba(78, 205, 196, 0.15);
+            color: #4ecdc4;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-today:hover {
+            background: rgba(78, 205, 196, 0.25);
+        }
+
+        /* PC: layout mais largo e formulário em 2 colunas */
+        @media (min-width: 640px) {
+            body { padding: 24px; }
             .container {
-                padding: 25px;
+                max-width: 720px;
+                padding: 40px 48px;
             }
-
-            h1 {
-                font-size: 2rem;
+            .form-fields {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0 24px;
             }
+            .form-fields .form-group { margin-bottom: 12px; }
+            .form-fields .form-group .form-input { margin-bottom: 0; }
+            .form-fields .form-group.full { grid-column: 1 / -1; }
+        }
 
+        /* PC grande: ainda mais espaço */
+        @media (min-width: 900px) {
+            .container { max-width: 860px; padding: 48px 56px; }
+            .menu-grid { gap: 16px; }
+            .menu-btn { padding: 28px 20px; }
+            .upload-area { padding: 36px 24px; }
+        }
+
+        /* Mobile: touch-friendly e legível */
+        @media (max-width: 639px) {
+            body {
+                padding: 12px;
+                align-items: flex-start;
+                padding-top: max(12px, env(safe-area-inset-top));
+                padding-bottom: max(16px, env(safe-area-inset-bottom));
+            }
+            .container {
+                padding: 20px 16px;
+                max-width: 100%;
+            }
+            h1 { font-size: 1.75rem; margin-bottom: 6px; }
+            .subtitle { font-size: 0.9rem; margin-bottom: 20px; }
+            .main-menu { margin-bottom: 20px; }
+            .menu-title { margin-bottom: 12px; }
             .menu-grid {
                 grid-template-columns: 1fr;
                 gap: 10px;
             }
-
             .menu-btn {
                 flex-direction: row;
-                padding: 18px 20px;
+                padding: 16px 18px;
                 justify-content: flex-start;
-                gap: 15px;
+                gap: 14px;
+                min-height: 56px;
             }
-
-            .menu-btn .icon {
-                font-size: 2rem;
+            .menu-btn .icon { font-size: 1.75rem; margin-bottom: 0; }
+            .menu-btn .info { text-align: left; }
+            .divider { margin: 20px 0; }
+            .upload-section-desc { font-size: 0.85rem; margin-bottom: 12px; }
+            .upload-area {
+                padding: 24px 16px;
+                margin-bottom: 12px;
+                min-height: 120px;
+            }
+            .upload-text { font-size: 0.95rem; }
+            .form-group { margin-bottom: 12px; }
+            .form-group .form-input {
+                padding: 14px 16px;
                 margin-bottom: 0;
+                font-size: 16px; /* evita zoom no iOS */
+                min-height: 48px;
             }
-
-            .menu-btn .info {
-                text-align: left;
+            .date-field-wrap { flex-wrap: wrap; }
+            .btn-today { min-height: 48px; padding: 12px 16px; }
+            .btn {
+                padding: 16px 24px;
+                min-height: 52px;
+                font-size: 0.95rem;
             }
+            .server-status { font-size: 0.8rem; padding: 10px 12px; }
+            .progress-label { font-size: 0.85rem; }
+            .status { padding: 14px; font-size: 0.9rem; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Cursor</h1>
-        <p class="subtitle">Apresentações de PDF Sincronizadas</p>
+        <h1>Apresentações de PDF Remotas Online</h1>
+        <p class="subtitle">Sincronize e controle apresentações em tempo real</p>
 
         <!-- Menu Principal -->
         <div class="main-menu">
             <div class="menu-title">Escolha uma opção</div>
             <div class="menu-grid">
+                <a href="/playlist" class="menu-btn" style="background: linear-gradient(135deg, rgba(78, 205, 196, 0.3), rgba(78, 205, 196, 0.1)); border-color: rgba(78, 205, 196, 0.5);">
+                    <span class="icon">📋</span>
+                    <div class="info">
+                        <span class="label">Playlist</span>
+                        <span class="desc">Minhas apresentações</span>
+                    </div>
+                </a>
                 <a href="/admin" class="menu-btn admin">
                     <span class="icon">🎮</span>
                     <div class="info">
@@ -362,11 +523,14 @@
         </div>
 
         <div class="divider">
-            <span>ou envie um PDF</span>
+            <span>Cadastrar apresentação (Supabase)</span>
         </div>
 
-        <!-- Upload Section -->
+        <!-- Cadastro: PDF + Título, Data, Local → Supabase -->
         <div class="upload-section">
+            <p class="upload-section-desc">Envie o PDF e preencha os dados. A apresentação será salva no Supabase e aparecerá na Playlist e no Apresentador.</p>
+            <p class="server-status" id="serverStatus">Servidor: a verificar...</p>
+
             <div class="upload-area" id="uploadArea">
                 <div class="upload-icon">📄</div>
                 <p class="upload-text">Arraste o PDF ou clique para selecionar</p>
@@ -380,12 +544,37 @@
                 <div class="file-size" id="fileSize"></div>
             </div>
 
-            <div class="progress-bar" id="progressBar">
-                <div class="progress-fill" id="progressFill"></div>
+            <div class="form-fields">
+                <div class="form-group full">
+                    <label class="form-label" for="inputTitle">Título da apresentação *</label>
+                    <input type="text" id="inputTitle" class="form-input" placeholder="Ex: Culto de Celebração" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="inputPregador">Pregador</label>
+                    <input type="text" id="inputPregador" class="form-input" placeholder="Ex: Pr. João Silva" value="Pr. Filipe">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="inputDate">Data do evento</label>
+                    <div class="date-field-wrap">
+                        <input type="date" id="inputDate" class="form-input" title="Clique para escolher ou use Hoje">
+                        <button type="button" class="btn-today" id="btnToday" title="Definir como hoje">Hoje</button>
+                    </div>
+                </div>
+                <div class="form-group full">
+                    <label class="form-label" for="inputLocation">Local</label>
+                    <input type="text" id="inputLocation" class="form-input" placeholder="Ex: Igreja Central" value="IFC">
+                </div>
+            </div>
+
+            <div class="progress-wrap" id="progressWrap">
+                <div class="progress-label" id="progressLabel">Enviando... 0%</div>
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
             </div>
 
             <button class="btn btn-primary" id="uploadBtn" disabled>
-                Enviar Apresentação
+                Cadastrar e enviar ao Supabase
             </button>
 
             <div class="status" id="status"></div>
@@ -400,10 +589,33 @@
         const fileSize = document.getElementById('fileSize');
         const uploadBtn = document.getElementById('uploadBtn');
         const status = document.getElementById('status');
+        const progressWrap = document.getElementById('progressWrap');
+        const progressLabel = document.getElementById('progressLabel');
         const progressBar = document.getElementById('progressBar');
         const progressFill = document.getElementById('progressFill');
+        const serverStatus = document.getElementById('serverStatus');
 
         let selectedFile = null;
+
+        document.getElementById('btnToday').addEventListener('click', () => {
+            const d = document.getElementById('inputDate');
+            if (d) d.value = new Date().toISOString().slice(0, 10);
+        });
+
+        const inputDateEl = document.getElementById('inputDate');
+        if (inputDateEl && inputDateEl.showPicker) {
+            inputDateEl.addEventListener('click', () => inputDateEl.showPicker());
+        }
+
+        if (window.location.protocol === 'file:') {
+            if (serverStatus) { serverStatus.textContent = 'Abra esta app em http://localhost:3000 (não em file://).'; serverStatus.className = 'server-status err'; }
+        } else {
+            fetch('/api/health').then(r => r.json()).then(d => {
+                if (serverStatus) { serverStatus.textContent = 'Servidor: ' + (d.ok ? 'OK' : 'erro') + (d.supabase ? ' | Supabase: OK' : ' | Supabase: não configurado'); serverStatus.className = 'server-status ' + (d.ok ? 'ok' : 'err'); }
+            }).catch(() => {
+                if (serverStatus) { serverStatus.textContent = 'Servidor: indisponível. Execute npm start e abra http://localhost:3000'; serverStatus.className = 'server-status err'; }
+            });
+        }
 
         uploadArea.addEventListener('click', () => fileInput.click());
 
@@ -447,6 +659,10 @@
             fileInfo.classList.add('visible');
             uploadBtn.disabled = false;
             status.style.display = 'none';
+            const titleEl = document.getElementById('inputTitle');
+            if (titleEl && !titleEl.value.trim()) {
+                titleEl.value = file.name.replace(/\.pdf$/i, '');
+            }
         }
 
         function formatFileSize(bytes) {
@@ -458,44 +674,90 @@
         uploadBtn.addEventListener('click', async () => {
             if (!selectedFile) return;
 
+            const titleInput = document.getElementById('inputTitle');
+            const title = titleInput ? titleInput.value.trim() : '';
+            if (!title) {
+                showStatus('Preencha o título da apresentação.', 'error');
+                return;
+            }
+
+            console.log('[upload] Clique: enviar PDF', selectedFile.name, 'título', title);
             uploadBtn.disabled = true;
             uploadBtn.textContent = 'Enviando...';
-            progressBar.classList.add('visible');
+            status.style.display = 'none';
+            progressWrap.classList.add('visible');
+            progressWrap.classList.remove('success');
+            progressLabel.textContent = 'Enviando... 0%';
             progressFill.style.width = '0%';
 
             const formData = new FormData();
             formData.append('pdf', selectedFile);
+            formData.append('title', title);
+            const pregadorInput = document.getElementById('inputPregador');
+            const dateInput = document.getElementById('inputDate');
+            const locationInput = document.getElementById('inputLocation');
+            if (pregadorInput && pregadorInput.value.trim()) formData.append('pregador', pregadorInput.value.trim());
+            if (dateInput && dateInput.value) formData.append('event_date', dateInput.value);
+            if (locationInput && locationInput.value.trim()) formData.append('location', locationInput.value.trim());
+
+            const uploadUrl = window.location.origin + '/upload';
+            console.log('[upload] POST', uploadUrl);
 
             const xhr = new XMLHttpRequest();
-            
+
             xhr.upload.addEventListener('progress', (e) => {
                 if (e.lengthComputable) {
-                    progressFill.style.width = (e.loaded / e.total * 100) + '%';
+                    const pct = Math.round((e.loaded / e.total) * 100);
+                    progressFill.style.width = pct + '%';
+                    progressLabel.textContent = 'Enviando... ' + pct + '%';
                 }
             });
 
             xhr.addEventListener('load', () => {
                 if (xhr.status === 200) {
-                    showStatus('Upload realizado com sucesso! Redirecionando...', 'success');
-                    setTimeout(() => window.location.href = '/admin', 1500);
+                    progressFill.style.width = '100%';
+                    progressLabel.textContent = 'Carregado na base de dados com sucesso.';
+                    progressWrap.classList.add('success');
+                    let resp = {};
+                    try { resp = JSON.parse(xhr.responseText); } catch (_) {}
+                    const sizeBytes = (resp.file_size != null && resp.file_size !== '') ? Number(resp.file_size) : (selectedFile && selectedFile.size != null ? selectedFile.size : null);
+                    const sizeStr = (sizeBytes != null && !isNaN(sizeBytes) && sizeBytes >= 0) ? '<br><span class="status-size">Tamanho do ficheiro: ' + formatFileSize(sizeBytes) + '</span>' : '';
+                    document.getElementById('status').innerHTML = [
+                        '<strong>Ficheiro carregado com sucesso na base de dados.</strong>',
+                        sizeStr,
+                        resp.id ? '<br><span class="status-id">Registo: ' + resp.id + '</span>' : '',
+                        '<br><br><a href="/admin" class="status-link">Ir para Apresentador</a> &nbsp;|&nbsp; <a href="/playlist" class="status-link">Ver Playlist</a>'
+                    ].join('');
+                    document.getElementById('status').className = 'status success';
+                    document.getElementById('status').style.display = 'block';
+                    resetUploadBtn();
                 } else {
+                    let msg = 'Erro ao enviar.';
+                    let err = null;
                     try {
-                        const error = JSON.parse(xhr.responseText);
-                        showStatus(error.error || 'Erro ao enviar arquivo.', 'error');
-                    } catch {
-                        showStatus('Erro ao enviar arquivo.', 'error');
+                        err = JSON.parse(xhr.responseText);
+                        msg = err.error || msg;
+                        if (err.code) msg += ' (código: ' + err.code + ')';
+                        if (xhr.status === 503) {
+                            msg = 'Supabase não configurado. Verifique o .env (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_BUCKET) e a tabela/bucket no Supabase.';
+                        }
+                        console.error('Upload falhou:', xhr.status, err);
+                    } catch (_) {
+                        console.error('Upload falhou:', xhr.status, xhr.responseText);
                     }
+                    showStatus(msg, 'error');
                     resetUploadBtn();
                 }
             });
 
             xhr.addEventListener('error', () => {
-                showStatus('Erro de conexão. Tente novamente.', 'error');
+                showStatus('Erro de conexão. Certifique-se de que o servidor está a correr (npm start) e que está em http://localhost:' + (window.location.port || '3000') + '.', 'error');
                 resetUploadBtn();
             });
 
-            xhr.open('POST', '/upload');
+            xhr.open('POST', uploadUrl);
             xhr.send(formData);
+            console.log('[upload] Pedido enviado (XHR).');
         });
 
         function showStatus(message, type) {
@@ -505,8 +767,8 @@
 
         function resetUploadBtn() {
             uploadBtn.disabled = false;
-            uploadBtn.textContent = 'Enviar Apresentação';
-            progressBar.classList.remove('visible');
+            uploadBtn.textContent = 'Cadastrar e enviar ao Supabase';
+            progressWrap.classList.remove('visible');
         }
     </script>
 </body>
