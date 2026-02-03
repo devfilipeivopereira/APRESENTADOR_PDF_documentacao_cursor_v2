@@ -24,16 +24,12 @@ O backend é o coração da aplicação, responsável por gerenciar o upload de 
 
 O frontend consiste em duas interfaces distintas, cada uma otimizada para seu propósito específico, e ambas utilizam tecnologias web padrão para renderização e interatividade.
 
-*   **PDF.js:** Biblioteca JavaScript de código aberto desenvolvida pela Mozilla, utilizada para renderizar documentos PDF diretamente no navegador. É responsável por:
-    *   **Renderização de Páginas:** Converter páginas do PDF em elementos `canvas` HTML.
-    *   **Controle de Zoom e Navegação:** Embora a navegação seja controlada pelo backend, o PDF.js lida com a exibição visual.
-*   **HTML5 Canvas:** Elemento HTML onde o PDF.js renderiza as páginas do documento. Permite manipulação gráfica avançada e é crucial para a exibição dos slides.
-*   **CSS Moderno (Flexbox/Grid):** Utilizado para estilizar as interfaces, garantindo um layout responsivo e adaptável a diferentes tamanhos de tela (desktop, tablet, celular), além de temas visuais (dark mode).
-*   **JavaScript (Vanilla/Frameworks Leves):** Lidar com a lógica do lado do cliente, como:
-    *   **Conexão Socket.io:** Estabelecer e manter a conexão com o servidor.
-    *   **Recepção de Eventos:** Processar eventos `pageUpdated` do servidor para atualizar o slide exibido.
-    *   **Interação do Usuário:** Capturar eventos de teclado e cliques de botões na interface do apresentador.
-    *   **Fullscreen API:** Gerenciar o modo de tela cheia para a interface do projetor.
+*   **Interface de Projetor (`/view`):** Tela cheia, transição suave entre slides (double-buffer).
+*   **Interface de Apresentador (`/admin`):** Slide atual e preview do próximo (double-buffer), controles e atalhos de teclado.
+*   **Controle Remoto (`/remote`):** Interface para celular/tablet na rede; swipe, menu retrátil com grade de slides (estilo Keynote).
+*   **PDF.js:** Renderização de PDF no navegador (elementos `canvas`).
+*   **CSS (Flexbox/Grid):** Layout responsivo (desktop, tablet, celular, iPad) e tema dark.
+*   **JavaScript (Vanilla):** Conexão Socket.io, eventos `pageUpdated`, atalhos, Fullscreen API.
 
 ## Fluxo de Dados e Comunicação
 

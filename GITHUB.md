@@ -1,30 +1,22 @@
-# Enviar o projeto para o GitHub
+# Repositório no GitHub
 
-O repositório Git local já está criado com o primeiro commit na branch `main`.
+O projeto está em: **https://github.com/devfilipeivopereira/APRESENTADOR_PDF_documentacao_cursor_v2**
 
-## Passos para criar o repositório no GitHub e enviar o código
+## Enviar alterações (push)
 
-### 1. Criar o repositório no GitHub
-
-1. Acesse [github.com/new](https://github.com/new)
-2. Em **Repository name**, use por exemplo: `APRESENTADOR_PDF_documentacao_cursor_v2`
-3. Deixe **Public** e **não** marque "Add a README" (o projeto já tem conteúdo)
-4. Clique em **Create repository**
-
-### 2. Conectar e enviar (push)
-
-No terminal, na pasta do projeto, execute (substitua `SEU_USUARIO` pelo seu usuário do GitHub):
+O remote `origin` já está configurado. Para enviar commits:
 
 ```bash
-git remote add origin https://github.com/SEU_USUARIO/APRESENTADOR_PDF_documentacao_cursor_v2.git
-git push -u origin main
+git add .
+git commit -m "Sua mensagem"
+git push origin main
 ```
 
-Se preferir SSH:
+## Clonar em outro computador
 
 ```bash
-git remote add origin git@github.com:SEU_USUARIO/APRESENTADOR_PDF_documentacao_cursor_v2.git
-git push -u origin main
+git clone https://github.com/devfilipeivopereira/APRESENTADOR_PDF_documentacao_cursor_v2.git
+cd APRESENTADOR_PDF_documentacao_cursor_v2
+npm install
+npm start
 ```
-
-Depois disso, o código estará no GitHub.

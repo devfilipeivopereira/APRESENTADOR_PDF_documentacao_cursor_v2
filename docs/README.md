@@ -8,19 +8,20 @@ A Aplicação Cursor é uma solução inovadora para realizar apresentações de
 
 *   **Upload de PDF:** Permite o upload de arquivos PDF para serem utilizados como apresentações.
 *   **Sincronização em Tempo Real:** Garante que todos os dispositivos conectados exibam o mesmo slide simultaneamente.
-*   **Interface de Projetor (`/view`):** Uma tela limpa e em tela cheia, ideal para exibição em projetores, sem controles visíveis.
-*   **Interface de Apresentador (`/admin`):** Um painel de controle completo com visualização do slide atual, preview do próximo, botões de navegação e atalhos de teclado.
-*   **Responsividade:** Interfaces otimizadas para desktop, tablet e celular.
+*   **Interface de Projetor (`/view`):** Tela limpa e em tela cheia, ideal para projetores. Transição suave entre slides (double-buffer, sem piscar).
+*   **Interface de Apresentador (`/admin`):** Painel de controle com slide atual, preview do próximo (também com double-buffer), botões de navegação e atalhos de teclado.
+*   **Controle Remoto (`/remote`):** Interface otimizada para celular e tablet na rede; swipe, menu retrátil com grade de slides (estilo Keynote), layout adaptável a retrato e paisagem.
+*   **Responsividade:** Interfaces otimizadas para desktop, tablet e celular (incluindo iPad).
 
 ## Estrutura da Documentação
 
 Esta pasta `/docs` contém a documentação completa do projeto, organizada nos seguintes arquivos:
 
-*   [`arquitetura.md`](./arquitetura.md): Detalha a estrutura geral da aplicação, seus componentes de backend e frontend, e o fluxo de comunicação.
-*   [`modelo_de_dados.md`](./modelo_de_dados.md): Descreve o modelo de dados utilizado para gerenciar o estado da apresentação.
-*   [`tecnologias.md`](./tecnologias.md): Lista e justifica as tecnologias empregadas no desenvolvimento da aplicação.
-    *   [`fluxo.md`](./fluxo.md): Explica o fluxo de execução da aplicação, desde a inicialização até a sincronização dos slides.
-    *   [`comunicacao_rede_seguranca.md`](./comunicacao_rede_seguranca.md): Detalha os protocolos de rede, portas e considerações de segurança.
+*   [`arquitetura.md`](./arquitetura.md): Estrutura da aplicação, backend, frontend e fluxo de comunicação.
+*   [`modelo_de_dados.md`](./modelo_de_dados.md): Modelo de dados do estado da apresentação.
+*   [`tecnologias.md`](./tecnologias.md): Tecnologias utilizadas (Node.js, Express, Socket.io, PDF.js).
+*   [`fluxo.md`](./fluxo.md): Fluxo de execução, da inicialização à sincronização dos slides.
+*   [`comunicacao_rede_seguranca.md`](./comunicacao_rede_seguranca.md): Rede, portas e segurança.
 
 ### Arquivos de Configuração Essenciais
 
@@ -60,20 +61,17 @@ Certifique-se de ter o Node.js (versão LTS recomendada) e o npm instalados em s
 2.  **Acesse a Interface de Upload:**
     Abra seu navegador e acesse o endereço IP do servidor (ex: `http://192.168.1.x:3000`). Faça o upload do arquivo PDF desejado.
 
-3.  **Acesse a Interface do Apresentador:**
-    No seu dispositivo de controle (desktop, tablet, celular), acesse `http://192.168.1.x:3000/admin`.
-
-4.  **Acesse a Interface do Projetor:**
-    No dispositivo de exibição (projetor), acesse `http://192.168.1.x:3000/view`.
+3.  **Apresentador:** No dispositivo de controle, acesse `http://IP:3000/admin`.
+4.  **Projetor:** No dispositivo de exibição, acesse `http://IP:3000/view`.
+5.  **Controle remoto:** No celular/tablet na mesma rede, acesse `http://IP:3000/remote`.
 
 ### Navegação na Apresentação
 
 Na interface do apresentador (`/admin`):
 
-*   Use os botões **
-Anterior** e **Próximo** para mudar de slide.
-*   Utilize as setas do teclado (← e →) ou a tecla **Espaço** para navegar entre os slides.
-*   O preview do próximo slide estará visível para auxiliar na transição.
+*   Use os botões **Anterior** e **Próximo** para mudar de slide.
+*   Use as setas do teclado (← e →) ou a tecla **Espaço** para navegar.
+*   O preview do próximo slide é exibido sem piscar (double-buffer).
 
 Na interface do projetor (`/view`):
 
@@ -85,20 +83,20 @@ Na interface do projetor (`/view`):
 ### Estrutura de Pastas
 
 ```
-. 
+.
 ├── server.js             # Servidor Node.js principal
-├── package.json          # Dependências e scripts do projeto
-├── .gitignore            # Arquivos e diretórios ignorados pelo Git
+├── package.json          # Dependências e scripts
 ├── .env.example          # Exemplo de variáveis de ambiente
-├── public/               # Arquivos estáticos do frontend
-│   ├── index.html        # Página de upload de PDF
+├── public/               # Frontend
+│   ├── index.html        # Menu + upload de PDF
 │   ├── view.html         # Interface do projetor
 │   ├── admin.html        # Interface do apresentador
-│   └── js/               # Scripts JavaScript do frontend
+│   ├── remote.html       # Controle remoto (celular/tablet)
+│   └── js/
 │       ├── view.js
 │       └── admin.js
-├── uploads/              # Diretório para PDFs carregados
-└── docs/                 # Documentação do projeto
+├── uploads/              # PDFs carregados (criado automaticamente)
+└── docs/                 # Documentação
     ├── README.md
     ├── arquitetura.md
     ├── modelo_de_dados.md

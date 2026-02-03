@@ -21,12 +21,13 @@ O fluxo de execução da aplicação Cursor é centrado na comunicação em temp
 6.  O estado global da apresentação é atualizado com `pdfUrl`, `fileName`, `totalSlides` e `currentSlide` (definido como 1).
 7.  O servidor emite um evento Socket.io para todos os clientes conectados (se houver) informando sobre o novo PDF carregado e o estado inicial.
 
-## 3. Conexão de Clientes (Projetor e Apresentador)
+## 3. Conexão de Clientes (Projetor, Apresentador e Controle Remoto)
 
-1.  **Projetor:** Um dispositivo (e.g., um navegador em um projetor) acessa a rota `/view`.
+1.  **Projetor:** Um dispositivo (e.g., navegador no projetor) acessa a rota `/view`.
 2.  **Apresentador:** O dispositivo do apresentador (desktop, tablet, celular) acessa a rota `/admin`.
-3.  Ambos os clientes estabelecem uma conexão WebSocket com o servidor via Socket.io.
-4.  Ao se conectar, o servidor envia o estado global atual da apresentação (incluindo `pdfUrl`, `currentSlide`, `totalSlides`) para o cliente recém-conectado.
+3.  **Controle remoto:** Celular ou tablet na mesma rede acessa a rota `/remote` para controlar a apresentação (swipe, menu de slides).
+4.  Todos os clientes estabelecem conexão WebSocket com o servidor via Socket.io.
+5.  Ao se conectar, o servidor envia o estado global atual (incluindo `pdfUrl`, `currentSlide`, `totalSlides`) para o cliente recém-conectado.
 
 ## 4. Exibição da Apresentação (Interface `/view` - Projetor)
 
@@ -34,8 +35,7 @@ O fluxo de execução da aplicação Cursor é centrado na comunicação em temp
 2.  Utiliza a biblioteca PDF.js para carregar o PDF e renderizar a página correspondente ao `currentSlide` em um elemento `<canvas>`.
 3.  A renderização é ajustada para ocupar o máximo da tela, mantendo o `aspect ratio`.
 4.  A interface é mantida limpa, em tela cheia, com fundo preto e um botão discreto para alternar o modo fullscreen.
-5.  O cliente `/view` fica 
-escutando eventos `pageUpdated` do servidor.
+5.  O cliente `/view` fica escutando eventos `pageUpdated` do servidor. A troca de slides usa double-buffer para transição suave (sem piscar).
 
 ## 5. Controle da Apresentação (Interface `/admin` - Apresentador)
 
