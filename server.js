@@ -141,6 +141,7 @@ app.post('/api/logout', (req, res) => {
 app.get('/', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+/** Projetor: rota pública (sem login) para poder compartilhar o link com qualquer pessoa */
 app.get('/view', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'view.html'));
 });

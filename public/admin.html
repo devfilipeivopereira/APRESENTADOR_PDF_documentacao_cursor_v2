@@ -448,18 +448,22 @@
 
         .link-row {
             display: flex;
-            gap: 8px;
+            justify-content: center;
+            gap: 10px;
             margin-top: 12px;
         }
 
         .net-link {
-            flex: 1;
-            padding: 10px 8px;
-            text-align: center;
+            flex: 0 0 auto;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
             border-radius: 8px;
             text-decoration: none;
-            font-size: 0.8rem;
-            font-weight: 600;
+            font-size: 1.4rem;
             transition: all 0.3s ease;
         }
 
@@ -473,6 +477,28 @@
             background: rgba(78, 205, 196, 0.2);
             color: #4ecdc4;
             border: 1px solid rgba(78, 205, 196, 0.3);
+        }
+
+        .btn-share-view {
+            flex: 0 0 auto;
+            width: 44px;
+            height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-size: 1.25rem;
+            color: #4ecdc4;
+            background: rgba(78, 205, 196, 0.2);
+            border: 1px solid rgba(78, 205, 196, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .btn-share-view .share-icon-char { font-size: inherit; }
+        .btn-share-view:hover {
+            background: rgba(78, 205, 196, 0.3);
+            border-color: #4ecdc4;
         }
 
         .net-link:hover {
@@ -842,8 +868,9 @@
                     <div class="network-url lan" id="networkLanUrl"></div>
                 </div>
                 <div class="link-row">
-                    <a href="#" id="linkRemote" class="net-link remote" target="_blank">📱 Abrir Controle Remoto</a>
-                    <a href="#" id="linkView" class="net-link view" target="_blank">🖥️ Projetor</a>
+                    <a href="#" id="linkRemote" class="net-link remote" target="_blank" title="Abrir Controle Remoto">📱</a>
+                    <a href="#" id="linkView" class="net-link view" target="_blank" title="Projetor">🖥️</a>
+                    <button type="button" class="btn-share-view" id="shareViewBtn" title="Compartilhar ou copiar link do projetor"><span class="share-icon-char" aria-hidden="true">⎘</span></button>
                 </div>
                 <div class="remote-qr-wrap" id="remoteQrWrap" style="display: none;">
                     <div class="qr-box">
@@ -926,6 +953,34 @@
             }
         }
         loadNetworkInfo();
+
+        (function shareView() {
+            const btn = document.getElementById('shareViewBtn');
+            const linkView = document.getElementById('linkView');
+            if (!btn || !linkView) return;
+            async function doShare() {
+                const viewUrl = linkView.href && linkView.href !== '#' ? linkView.href : (window.location.origin + '/view');
+                const iconSpan = btn.querySelector('.share-icon-char');
+                function setState(icon, title) {
+                    if (iconSpan) iconSpan.textContent = icon;
+                    btn.title = title;
+                }
+                if (navigator.share) {
+                    try {
+                        await navigator.share({ title: 'Projetor - Apresentação', url: viewUrl, text: 'Link para a tela do projetor (não precisa de login)' });
+                        setState('✓', 'Enviado!');
+                        setTimeout(function() { setState('⎘', 'Compartilhar ou copiar link do projetor'); }, 2000);
+                        return;
+                    } catch (e) { if (e.name === 'AbortError') return; }
+                }
+                try {
+                    await navigator.clipboard.writeText(viewUrl);
+                    setState('✓', 'Link copiado!');
+                    setTimeout(function() { setState('⎘', 'Compartilhar ou copiar link do projetor'); }, 2000);
+                } catch (_) { window.prompt('Copie o link:', viewUrl); }
+            }
+            btn.addEventListener('click', doShare);
+        })();
     </script>
 </body>
 </html>
