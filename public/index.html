@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cursor - Apresentações de PDF</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #ffffff;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 550px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #a0a0a0;
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+
+        /* Menu Principal */
+        .main-menu {
+            margin-bottom: 30px;
+        }
+
+        .menu-title {
+            font-size: 0.85rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .menu-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 25px 15px;
+            border-radius: 15px;
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .menu-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .menu-btn .icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .menu-btn .label {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .menu-btn .desc {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 5px;
+        }
+
+        .menu-btn.admin {
+            background: linear-gradient(135deg, rgba(233, 69, 96, 0.3), rgba(233, 69, 96, 0.1));
+            border-color: rgba(233, 69, 96, 0.5);
+        }
+
+        .menu-btn.admin:hover {
+            background: linear-gradient(135deg, rgba(233, 69, 96, 0.5), rgba(233, 69, 96, 0.2));
+            border-color: #e94560;
+        }
+
+        .menu-btn.remote {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(102, 126, 234, 0.1));
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        .menu-btn.remote:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.5), rgba(102, 126, 234, 0.2));
+            border-color: #667eea;
+        }
+
+        .menu-btn.view {
+            background: linear-gradient(135deg, rgba(78, 205, 196, 0.3), rgba(78, 205, 196, 0.1));
+            border-color: rgba(78, 205, 196, 0.5);
+        }
+
+        .menu-btn.view:hover {
+            background: linear-gradient(135deg, rgba(78, 205, 196, 0.5), rgba(78, 205, 196, 0.2));
+            border-color: #4ecdc4;
+        }
+
+        /* Divisor */
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 25px 0;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .divider span {
+            padding: 0 15px;
+            color: #666;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        /* Upload Section */
+        .upload-section h3 {
+            font-size: 0.85rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(233, 69, 96, 0.4);
+            border-radius: 15px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: #e94560;
+            background: rgba(233, 69, 96, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .upload-hint {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(233, 69, 96, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .file-info {
+            background: rgba(233, 69, 96, 0.1);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .file-info.visible {
+            display: block;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #e94560;
+            word-break: break-all;
+            font-size: 0.9rem;
+        }
+
+        .file-size {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 3px;
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 10px;
+            display: none;
+            font-size: 0.9rem;
+        }
+
+        .status.success {
+            display: block;
+            background: rgba(46, 213, 115, 0.2);
+            color: #2ed573;
+        }
+
+        .status.error {
+            display: block;
+            background: rgba(255, 71, 87, 0.2);
+            color: #ff4757;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin-top: 15px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar.visible {
+            display: block;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 500px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .menu-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .menu-btn {
+                flex-direction: row;
+                padding: 18px 20px;
+                justify-content: flex-start;
+                gap: 15px;
+            }
+
+            .menu-btn .icon {
+                font-size: 2rem;
+                margin-bottom: 0;
+            }
+
+            .menu-btn .info {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cursor</h1>
+        <p class="subtitle">Apresentações de PDF Sincronizadas</p>
+
+        <!-- Menu Principal -->
+        <div class="main-menu">
+            <div class="menu-title">Escolha uma opção</div>
+            <div class="menu-grid">
+                <a href="/admin" class="menu-btn admin">
+                    <span class="icon">🎮</span>
+                    <div class="info">
+                        <span class="label">Apresentador</span>
+                        <span class="desc">Controle completo</span>
+                    </div>
+                </a>
+                <a href="/remote" class="menu-btn remote">
+                    <span class="icon">📱</span>
+                    <div class="info">
+                        <span class="label">Controle Remoto</span>
+                        <span class="desc">Para celular</span>
+                    </div>
+                </a>
+                <a href="/view" class="menu-btn view">
+                    <span class="icon">🖥️</span>
+                    <div class="info">
+                        <span class="label">Projetor</span>
+                        <span class="desc">Tela de exibição</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="divider">
+            <span>ou envie um PDF</span>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📄</div>
+                <p class="upload-text">Arraste o PDF ou clique para selecionar</p>
+                <p class="upload-hint">Tamanho máximo: 50MB</p>
+            </div>
+
+            <input type="file" id="fileInput" accept=".pdf,application/pdf">
+
+            <div class="file-info" id="fileInfo">
+                <div class="file-name" id="fileName"></div>
+                <div class="file-size" id="fileSize"></div>
+            </div>
+
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <button class="btn btn-primary" id="uploadBtn" disabled>
+                Enviar Apresentação
+            </button>
+
+            <div class="status" id="status"></div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const status = document.getElementById('status');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+
+        let selectedFile = null;
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (file.type !== 'application/pdf') {
+                showStatus('Por favor, selecione apenas arquivos PDF.', 'error');
+                return;
+            }
+
+            if (file.size > 50 * 1024 * 1024) {
+                showStatus('O arquivo excede o limite de 50MB.', 'error');
+                return;
+            }
+
+            selectedFile = file;
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.classList.add('visible');
+            uploadBtn.disabled = false;
+            status.style.display = 'none';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' bytes';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Enviando...';
+            progressBar.classList.add('visible');
+            progressFill.style.width = '0%';
+
+            const formData = new FormData();
+            formData.append('pdf', selectedFile);
+
+            const xhr = new XMLHttpRequest();
+            
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    progressFill.style.width = (e.loaded / e.total * 100) + '%';
+                }
+            });
+
+            xhr.addEventListener('load', () => {
+                if (xhr.status === 200) {
+                    showStatus('Upload realizado com sucesso! Redirecionando...', 'success');
+                    setTimeout(() => window.location.href = '/admin', 1500);
+                } else {
+                    try {
+                        const error = JSON.parse(xhr.responseText);
+                        showStatus(error.error || 'Erro ao enviar arquivo.', 'error');
+                    } catch {
+                        showStatus('Erro ao enviar arquivo.', 'error');
+                    }
+                    resetUploadBtn();
+                }
+            });
+
+            xhr.addEventListener('error', () => {
+                showStatus('Erro de conexão. Tente novamente.', 'error');
+                resetUploadBtn();
+            });
+
+            xhr.open('POST', '/upload');
+            xhr.send(formData);
+        });
+
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = 'status ' + type;
+        }
+
+        function resetUploadBtn() {
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = 'Enviar Apresentação';
+            progressBar.classList.remove('visible');
+        }
+    </script>
+</body>
+</html>

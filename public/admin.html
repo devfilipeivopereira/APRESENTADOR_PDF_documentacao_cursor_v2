@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cursor - Apresentador</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0f1a;
+            color: #fff;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            grid-template-rows: 1fr auto;
+            height: 100%;
+            gap: 15px;
+            padding: 15px;
+        }
+
+        /* Área principal do slide atual (double-buffer para transição suave) */
+        .main-slide {
+            grid-row: 1;
+            grid-column: 1;
+            background: #1a1a2e;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            min-height: 0;
+        }
+
+        .main-slide canvas {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 100%;
+            max-height: 100%;
+            display: block;
+        }
+
+        #currentCanvasB { z-index: 0; }
+        #currentCanvasA { z-index: 1; }
+
+        /* Painel lateral */
+        .sidebar {
+            grid-row: 1;
+            grid-column: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-height: 0;
+        }
+
+        /* Preview do próximo slide */
+        .preview-container {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+            min-height: 220px;
+            max-height: 400px;
+            overflow: hidden;
+        }
+
+        .preview-title {
+            font-size: 0.85rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+
+        .preview-slide {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #0f0f1a;
+            border-radius: 8px;
+            overflow: hidden;
+            min-height: 150px;
+            position: relative;
+        }
+
+        .preview-slide canvas {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            display: block;
+        }
+
+        #previewCanvasB { z-index: 0; }
+        #previewCanvasA { z-index: 1; }
+
+        /* Info da apresentação */
+        .presentation-info {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 15px;
+            flex-shrink: 0;
+        }
+
+        .file-name {
+            font-size: 0.9rem;
+            color: #e94560;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 10px;
+        }
+
+        .slide-counter {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .slide-counter span {
+            color: #e94560;
+        }
+
+        /* Ações do projetor */
+        .projector-actions {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 15px;
+            flex-shrink: 0;
+        }
+
+        .projector-actions h3 {
+            font-size: 0.85rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .btn-projector {
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(90deg, #4ecdc4, #44a3aa);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-projector:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(78, 205, 196, 0.3);
+        }
+
+        .btn-projector:active {
+            transform: translateY(0);
+        }
+
+        .projector-hint {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        /* Links de rede */
+        .network-links {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 15px;
+            flex-shrink: 0;
+        }
+
+        .network-links h3 {
+            font-size: 0.85rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .network-url {
+            background: #0f0f1a;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #4ecdc4;
+            text-align: center;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+
+        .link-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .net-link {
+            flex: 1;
+            padding: 10px 8px;
+            text-align: center;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .net-link.remote {
+            background: rgba(233, 69, 96, 0.2);
+            color: #e94560;
+            border: 1px solid rgba(233, 69, 96, 0.3);
+        }
+
+        .net-link.view {
+            background: rgba(78, 205, 196, 0.2);
+            color: #4ecdc4;
+            border: 1px solid rgba(78, 205, 196, 0.3);
+        }
+
+        .net-link:hover {
+            transform: translateY(-2px);
+        }
+
+        .network-hint {
+            font-size: 0.7rem;
+            color: #555;
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        /* Controles */
+        .controls {
+            grid-row: 2;
+            grid-column: 1 / -1;
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-nav {
+            background: #2d2d44;
+            color: #fff;
+            min-width: 140px;
+            justify-content: center;
+        }
+
+        .btn-nav:hover:not(:disabled) {
+            background: #3d3d5c;
+            transform: translateY(-2px);
+        }
+
+        .btn-nav:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-nav:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .keyboard-hint {
+            color: #666;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .key {
+            background: #2d2d44;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+
+        /* Status de conexão */
+        .connection-status {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            z-index: 1000;
+        }
+
+        .connection-status.connected {
+            background: rgba(46, 213, 115, 0.2);
+            color: #2ed573;
+            border: 1px solid rgba(46, 213, 115, 0.3);
+        }
+
+        .connection-status.disconnected {
+            background: rgba(255, 71, 87, 0.2);
+            color: #ff4757;
+            border: 1px solid rgba(255, 71, 87, 0.3);
+        }
+
+        /* Mensagem de espera */
+        .waiting-message {
+            position: absolute;
+            text-align: center;
+            color: #555;
+        }
+
+        .waiting-message h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #444;
+        }
+
+        .waiting-message p {
+            color: #666;
+        }
+
+        .waiting-message a {
+            color: #e94560;
+            text-decoration: none;
+        }
+
+        .waiting-message a:hover {
+            text-decoration: underline;
+        }
+
+        /* Link para upload */
+        .upload-link {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            padding: 8px 15px;
+            background: rgba(233, 69, 96, 0.2);
+            border: 1px solid rgba(233, 69, 96, 0.3);
+            border-radius: 20px;
+            color: #e94560;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .upload-link:hover {
+            background: rgba(233, 69, 96, 0.3);
+        }
+
+        /* Responsividade */
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr auto auto;
+            }
+
+            .sidebar {
+                grid-row: 2;
+                grid-column: 1;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .preview-container {
+                flex: 1 1 250px;
+                min-height: 180px;
+                max-height: 220px;
+            }
+
+            .preview-slide {
+                min-height: 100px;
+            }
+
+            .presentation-info {
+                flex: 0 0 auto;
+                min-width: 120px;
+            }
+
+            .projector-actions {
+                flex: 1 1 150px;
+            }
+
+            .controls {
+                grid-row: 3;
+                grid-column: 1;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .sidebar {
+                flex-direction: column;
+            }
+
+            .preview-container {
+                min-height: 150px;
+                max-height: 180px;
+            }
+
+            .preview-slide {
+                min-height: 80px;
+            }
+
+            .btn {
+                padding: 12px 20px;
+                font-size: 0.9rem;
+                min-width: 100px;
+            }
+
+            .keyboard-hint {
+                display: none;
+            }
+
+            .slide-counter {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="upload-link">+ Novo PDF</a>
+    
+    <div class="connection-status" id="connectionStatus">
+        Conectando...
+    </div>
+
+    <div class="container">
+        <!-- Slide principal -->
+        <div class="main-slide" id="mainSlide">
+            <div class="waiting-message" id="waitingMessage">
+                <h2>Nenhuma apresentação carregada</h2>
+                <p><a href="/">Clique aqui</a> para fazer upload de um PDF</p>
+            </div>
+            <canvas id="currentCanvasA"></canvas>
+            <canvas id="currentCanvasB"></canvas>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="preview-container">
+                <div class="preview-title">Próximo Slide</div>
+                <div class="preview-slide" id="previewSlideContainer">
+                    <canvas id="previewCanvasA"></canvas>
+                    <canvas id="previewCanvasB"></canvas>
+                </div>
+            </div>
+
+            <div class="presentation-info">
+                <div class="file-name" id="fileName">-</div>
+                <div class="slide-counter">
+                    <span id="currentSlide">-</span> / <span id="totalSlides">-</span>
+                </div>
+            </div>
+
+            <div class="projector-actions">
+                <h3>Projetor</h3>
+                <button class="btn-projector" id="openViewBtn" title="Abre uma nova janela para o projetor (arraste para o segundo monitor)">
+                    🖥️ Abrir Projetor
+                </button>
+                <p class="projector-hint">Arraste a janela para o segundo monitor e pressione F11 para tela cheia. Atalho: P</p>
+            </div>
+
+            <div class="network-links" id="networkLinks">
+                <h3>Acesso na Rede</h3>
+                <div class="network-url" id="networkUrl">Carregando...</div>
+                <div class="link-row">
+                    <a href="#" id="linkRemote" class="net-link remote" target="_blank">📱 Controle Remoto</a>
+                    <a href="#" id="linkView" class="net-link view" target="_blank">🖥️ Projetor</a>
+                </div>
+                <p class="network-hint">Use estes links em outros dispositivos da rede</p>
+            </div>
+        </div>
+
+        <!-- Controles -->
+        <div class="controls">
+            <button class="btn btn-nav" id="prevBtn" disabled>
+                ← Anterior
+            </button>
+            
+            <div class="keyboard-hint">
+                <span class="key">←</span>
+                <span class="key">→</span>
+                <span class="key">Espaço</span>
+            </div>
+            
+            <button class="btn btn-nav" id="nextBtn" disabled>
+                Próximo →
+            </button>
+        </div>
+    </div>
+
+    <!-- PDF.js da CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        // Configurar worker do PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    
+    <!-- Socket.io -->
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <!-- Script do admin (com cache-busting) -->
+    <script src="/js/admin.js?v=9"></script>
+    
+    <script>
+        // Carregar informações de rede
+        async function loadNetworkInfo() {
+            try {
+                const response = await fetch('/api/network');
+                const data = await response.json();
+                const baseUrl = `http://${data.ip}:${data.port}`;
+                
+                document.getElementById('networkUrl').textContent = baseUrl;
+                document.getElementById('linkRemote').href = `${baseUrl}/remote`;
+                document.getElementById('linkView').href = `${baseUrl}/view`;
+            } catch (error) {
+                console.log('Erro ao carregar info de rede');
+            }
+        }
+        loadNetworkInfo();
+    </script>
+</body>
+</html>

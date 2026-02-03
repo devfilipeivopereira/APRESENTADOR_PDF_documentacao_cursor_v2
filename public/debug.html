@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug PDF - Diagnóstico</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #1a1a2e;
+            color: #fff;
+            padding: 20px;
+        }
+        h1 { color: #e94560; margin-bottom: 20px; }
+        h2 { color: #4ecdc4; margin: 20px 0 10px; font-size: 1.2rem; }
+        .controls {
+            background: #2d2d44;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        select, button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 5px;
+            border: none;
+            margin-right: 10px;
+        }
+        select { background: #1a1a2e; color: #fff; min-width: 300px; }
+        button { background: #e94560; color: #fff; cursor: pointer; }
+        button:hover { background: #ff6b6b; }
+        .info-box {
+            background: #2d2d44;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .canvas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+        .canvas-container {
+            background: #2d2d44;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .canvas-container h3 {
+            color: #4ecdc4;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        .canvas-wrapper {
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        canvas {
+            max-width: 100%;
+            max-height: 400px;
+        }
+        .page-nav {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .page-nav button {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+        .page-info { color: #888; }
+    </style>
+</head>
+<body>
+    <h1>Diagnóstico de PDF</h1>
+    
+    <div class="controls">
+        <select id="pdfSelect">
+            <option value="">Selecione um PDF...</option>
+        </select>
+        <button onclick="loadSelectedPdf()">Carregar e Analisar</button>
+    </div>
+    
+    <div id="pdfInfo" class="info-box" style="display:none;"></div>
+    
+    <div class="page-nav" id="pageNav" style="display:none;">
+        <button onclick="prevPage()">← Anterior</button>
+        <span class="page-info">Página <span id="currentPage">1</span> de <span id="totalPages">1</span></span>
+        <button onclick="nextPage()">Próximo →</button>
+    </div>
+    
+    <h2>Comparação de Renderização</h2>
+    <div class="canvas-grid" id="canvasGrid"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        
+        let pdfDoc = null;
+        let currentPageNum = 1;
+        
+        // Carregar lista de PDFs
+        async function loadPdfList() {
+            const response = await fetch('/api/slides');
+            const slides = await response.json();
+            const select = document.getElementById('pdfSelect');
+            
+            slides.forEach(slide => {
+                const option = document.createElement('option');
+                option.value = slide.url;
+                option.textContent = slide.name;
+                select.appendChild(option);
+            });
+        }
+        
+        async function loadSelectedPdf() {
+            const url = document.getElementById('pdfSelect').value;
+            if (!url) return alert('Selecione um PDF');
+            
+            try {
+                pdfDoc = await pdfjsLib.getDocument(url).promise;
+                currentPageNum = 1;
+                document.getElementById('totalPages').textContent = pdfDoc.numPages;
+                document.getElementById('pageNav').style.display = 'flex';
+                await analyzePage(currentPageNum);
+            } catch (error) {
+                alert('Erro ao carregar PDF: ' + error.message);
+            }
+        }
+        
+        async function analyzePage(pageNum) {
+            if (!pdfDoc) return;
+            
+            document.getElementById('currentPage').textContent = pageNum;
+            const page = await pdfDoc.getPage(pageNum);
+            
+            // Informações da página
+            const info = {
+                'Número da Página': pageNum,
+                'Rotação (page.rotate)': page.rotate,
+                'View (MediaBox)': page.view ? `[${page.view.join(', ')}]` : 'N/A',
+                'Largura MediaBox': page.view ? page.view[2] : 'N/A',
+                'Altura MediaBox': page.view ? page.view[3] : 'N/A',
+            };
+            
+            // Viewports com diferentes configurações
+            const vp0 = page.getViewport({ scale: 1 });
+            const vp90 = page.getViewport({ scale: 1, rotation: 90 });
+            const vp180 = page.getViewport({ scale: 1, rotation: 180 });
+            const vp270 = page.getViewport({ scale: 1, rotation: 270 });
+            
+            info['Viewport (scale:1)'] = `${vp0.width.toFixed(0)} x ${vp0.height.toFixed(0)}`;
+            info['Viewport (rotation:90)'] = `${vp90.width.toFixed(0)} x ${vp90.height.toFixed(0)}`;
+            info['Viewport (rotation:180)'] = `${vp180.width.toFixed(0)} x ${vp180.height.toFixed(0)}`;
+            info['Viewport (rotation:270)'] = `${vp270.width.toFixed(0)} x ${vp270.height.toFixed(0)}`;
+            info['Orientação Detectada'] = vp0.width > vp0.height ? 'PAISAGEM' : 'RETRATO';
+            
+            // Mostrar info
+            const infoBox = document.getElementById('pdfInfo');
+            infoBox.style.display = 'block';
+            infoBox.textContent = Object.entries(info).map(([k, v]) => `${k}: ${v}`).join('\n');
+            
+            // Renderizar com diferentes configurações
+            const grid = document.getElementById('canvasGrid');
+            grid.innerHTML = '';
+            
+            const configs = [
+                { name: 'Padrão (sem rotação)', rotation: undefined },
+                { name: 'Rotation: 0', rotation: 0 },
+                { name: 'Rotation: 90', rotation: 90 },
+                { name: 'Rotation: 180', rotation: 180 },
+                { name: 'Rotation: 270', rotation: 270 },
+            ];
+            
+            for (const config of configs) {
+                const container = document.createElement('div');
+                container.className = 'canvas-container';
+                
+                const title = document.createElement('h3');
+                title.textContent = config.name;
+                container.appendChild(title);
+                
+                const wrapper = document.createElement('div');
+                wrapper.className = 'canvas-wrapper';
+                
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                const vpOptions = { scale: 0.5 };
+                if (config.rotation !== undefined) {
+                    vpOptions.rotation = config.rotation;
+                }
+                
+                const viewport = page.getViewport(vpOptions);
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                
+                await page.render({
+                    canvasContext: ctx,
+                    viewport: viewport
+                }).promise;
+                
+                const sizeInfo = document.createElement('p');
+                sizeInfo.style.cssText = 'color:#888; font-size:0.8rem; margin-top:10px;';
+                sizeInfo.textContent = `Canvas: ${canvas.width}x${canvas.height}`;
+                
+                wrapper.appendChild(canvas);
+                container.appendChild(wrapper);
+                container.appendChild(sizeInfo);
+                grid.appendChild(container);
+            }
+        }
+        
+        function prevPage() {
+            if (currentPageNum > 1) {
+                currentPageNum--;
+                analyzePage(currentPageNum);
+            }
+        }
+        
+        function nextPage() {
+            if (pdfDoc && currentPageNum < pdfDoc.numPages) {
+                currentPageNum++;
+                analyzePage(currentPageNum);
+            }
+        }
+        
+        loadPdfList();
+    </script>
+</body>
+</html>
