@@ -26,7 +26,7 @@ O frontend consiste em duas interfaces distintas, cada uma otimizada para seu pr
 
 *   **Interface de Projetor (`/view`):** Tela cheia, transição suave entre slides (double-buffer).
 *   **Interface de Apresentador (`/admin`):** Slide atual e preview do próximo (double-buffer), controles e atalhos de teclado.
-*   **Controle Remoto (`/remote`):** Interface para celular/tablet na rede; swipe, menu retrátil com grade de slides (estilo Keynote).
+*   **Controle Remoto (`/remote`):** Interface para celular/tablet na rede; swipe, menu retrátil com grade de slides (estilo Keynote). Miniaturas em proporção 16:9, ocupando a largura exata sem cortar.
 *   **Playlist (`/playlist`):** Tela para gerenciar apresentações: upload para Supabase Storage, metadata (data, local, informações extras), editar, excluir e iniciar apresentação (carrega o PDF na sessão atual).
 *   **PDF.js:** Renderização de PDF no navegador (elementos `canvas`).
 *   **CSS (Flexbox/Grid):** Layout responsivo (desktop, tablet, celular, iPad) e tema dark.

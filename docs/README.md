@@ -22,7 +22,7 @@ A Aplicação Cursor é uma solução para realizar apresentações de PDF de fo
 *   **Sincronização em Tempo Real:** Todos os dispositivos conectados exibem o mesmo slide simultaneamente (Socket.io).
 *   **Interface de Projetor (`/view`):** Tela limpa e em tela cheia, ideal para projetores. Transição suave entre slides (double-buffer, sem piscar).
 *   **Interface de Apresentador (`/admin`):** Painel de controle com slide atual, preview do próximo (double-buffer), botões de navegação, atalhos de teclado e secção de backup local.
-*   **Controle Remoto (`/remote`):** Interface para celular e tablet na rede; setas e Espaço no teclado; layout adaptável. Em mobile (≤768px) o header mostra apenas ícones (tela cheia, página inicial, slides, estado da conexão) e oculta o texto "Controle remoto".
+*   **Controle Remoto (`/remote`):** Interface para celular e tablet na rede; setas e Espaço no teclado; layout adaptável. Menu retrátil com grade de miniaturas em proporção 16:9 (largura exata, sem cortar). Em mobile (≤768px) o header mostra apenas ícones (tela cheia, página inicial, slides, estado da conexão) e oculta o texto "Controle remoto".
 *   **Tela cheia:** Todas as telas (página inicial, Playlist, Apresentador, Controle remoto, Login, Projetor) têm botão para alternar tela cheia (Fullscreen API).
 *   **Responsividade:** Interfaces otimizadas para desktop, tablet e celular (incluindo iPad).
 
