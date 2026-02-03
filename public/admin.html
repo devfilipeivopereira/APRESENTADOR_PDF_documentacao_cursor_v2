@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, viewport-fit=cover">
     <title>Cursor - Apresentador</title>
     <style>
         * {
@@ -18,10 +18,14 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #0f0f1a;
             color: #fff;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             padding-top: 52px;
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
         /* Barra de rolagem escura */
@@ -588,6 +592,18 @@
             transform: translateY(0);
         }
 
+        .btn-end {
+            background: linear-gradient(90deg, #c0392b, #a93226);
+            color: white;
+        }
+        .btn-end:hover:not(:disabled) {
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+            box-shadow: 0 4px 16px rgba(231, 76, 60, 0.35);
+        }
+        .btn-end:disabled {
+            opacity: 0.5;
+        }
+
         .keyboard-hint {
             color: #666;
             font-size: 0.85rem;
@@ -617,6 +633,9 @@
             gap: 12px;
             flex-wrap: wrap;
             padding: 0 20px;
+            padding-left: calc(20px + env(safe-area-inset-left));
+            padding-right: calc(20px + env(safe-area-inset-right));
+            padding-top: env(safe-area-inset-top);
             background: rgba(15, 15, 26, 0.95);
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             z-index: 1000;
@@ -698,7 +717,130 @@
             color: #e94560;
         }
 
-        /* Responsividade */
+        .btn-slides-drawer {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            background: rgba(78, 205, 196, 0.15);
+            border: 1px solid rgba(78, 205, 196, 0.35);
+            border-radius: 10px;
+            color: #4ecdc4;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-slides-drawer:hover { background: rgba(78, 205, 196, 0.25); }
+        .btn-slides-drawer:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* Drawer: todos os slides */
+        .admin-drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .admin-drawer-overlay.open { opacity: 1; visibility: visible; }
+        .admin-drawer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 85%;
+            max-height: 90vh;
+            background: #1a1a2e;
+            border-radius: 16px 16px 0 0;
+            z-index: 1000;
+            transform: translateY(100%);
+            transition: transform 0.3s;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 -4px 24px rgba(0,0,0,0.4);
+        }
+        .admin-drawer.open { transform: translateY(0); }
+        .admin-drawer-handle {
+            width: 36px;
+            height: 3px;
+            background: rgba(255,255,255,0.25);
+            border-radius: 2px;
+            margin: 8px auto;
+            flex-shrink: 0;
+        }
+        .admin-drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            flex-shrink: 0;
+        }
+        .admin-drawer-header h2 { font-size: 1rem; color: #fff; }
+        .admin-drawer-close {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .admin-drawer-close:hover { background: rgba(255,255,255,0.2); }
+        .admin-drawer-content {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 16px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .admin-slides-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px;
+            align-content: start;
+        }
+        .admin-grid-slide {
+            background: #0f0f1a;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid rgba(255,255,255,0.08);
+            display: flex;
+            flex-direction: column;
+            aspect-ratio: 16/9;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .admin-grid-slide:hover { border-color: rgba(78, 205, 196, 0.5); }
+        .admin-grid-slide.active { border-color: #e94560; box-shadow: inset 0 0 0 2px #e94560; }
+        .admin-grid-slide-canvas {
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            position: relative;
+            background: #0a0a15;
+        }
+        .admin-grid-slide-canvas canvas {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: contain;
+            display: block;
+        }
+        .admin-grid-slide-num {
+            padding: 4px 8px;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #888;
+            flex-shrink: 0;
+        }
+        .admin-grid-slide.active .admin-grid-slide-num { color: #e94560; }
+
+        /* Responsividade: tablet */
         @media (max-width: 900px) {
             .container {
                 grid-template-columns: 1fr;
@@ -738,39 +880,138 @@
             }
         }
 
+        /* Responsividade: celular */
         @media (max-width: 600px) {
             .admin-header {
-                padding: 0 12px;
-                height: 48px;
+                padding: 0 10px;
+                padding-left: calc(10px + env(safe-area-inset-left));
+                padding-right: calc(10px + env(safe-area-inset-right));
+                min-height: 48px;
+                gap: 8px;
+            }
+            .admin-header-nav {
+                gap: 6px;
             }
             .top-nav-link {
-                padding: 8px 14px;
-                font-size: 0.85rem;
+                padding: 8px 12px;
+                font-size: 0.8rem;
+                min-height: 40px;
+                display: inline-flex;
+                align-items: center;
+            }
+            .connection-status {
+                padding: 6px 10px;
+                font-size: 0.75rem;
+                max-width: 45%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
             body { padding-top: 48px; }
             .container {
                 height: calc(100% - 48px);
-                padding: 10px;
-                gap: 10px;
+                padding: 8px;
+                gap: 8px;
+            }
+
+            .main-slide {
+                min-height: 35vh;
             }
 
             .sidebar {
                 flex-direction: column;
+                flex-wrap: nowrap;
+                overflow-y: auto;
+                overflow-x: hidden;
+                -webkit-overflow-scrolling: touch;
+                max-height: 45vh;
+                min-height: 0;
             }
 
             .preview-container {
-                min-height: 150px;
-                max-height: 180px;
+                flex: 0 0 auto;
+                min-height: 140px;
+                max-height: 160px;
             }
 
             .preview-slide {
-                min-height: 80px;
+                min-height: 90px;
+            }
+
+            .playlist-sidebar,
+            .presentation-info,
+            .projector-actions,
+            .network-links,
+            .backup-local-sidebar {
+                flex: 0 0 auto;
+            }
+
+            .playlist-search,
+            .playlist-select {
+                min-height: 44px;
+                font-size: 16px; /* evita zoom no iOS */
+            }
+
+            .btn-playlist-refresh,
+            .btn-playlist-manage {
+                min-height: 44px;
+            }
+
+            .btn-projector {
+                min-height: 48px;
+                padding: 14px 16px;
+                font-size: 0.9rem;
+            }
+
+            .projector-hint {
+                font-size: 0.7rem;
+            }
+
+            .network-url {
+                padding: 10px 8px;
+                font-size: 0.8rem;
+            }
+
+            .link-row {
+                gap: 8px;
+                margin-top: 10px;
+            }
+
+            .net-link,
+            .btn-share-view {
+                width: 48px;
+                height: 48px;
+                min-width: 48px;
+                min-height: 48px;
+            }
+
+            .remote-qr-wrap .qr-box {
+                padding: 8px;
+            }
+            .remote-qr-wrap img {
+                width: 100px;
+                height: 100px;
+            }
+
+            .controls {
+                grid-row: 3;
+                grid-column: 1;
+                padding: 10px 8px;
+                gap: 12px;
             }
 
             .btn {
-                padding: 12px 20px;
-                font-size: 0.9rem;
-                min-width: 100px;
+                padding: 14px 20px;
+                font-size: 0.95rem;
+                min-width: 0;
+                min-height: 48px;
+                flex: 1;
+                justify-content: center;
+                touch-action: manipulation;
+            }
+
+            .btn-nav {
+                min-width: 0;
             }
 
             .keyboard-hint {
@@ -779,6 +1020,46 @@
 
             .slide-counter {
                 font-size: 1.5rem;
+            }
+
+            .file-name {
+                font-size: 0.85rem;
+            }
+
+            .waiting-message h2 {
+                font-size: 1.2rem;
+            }
+            .waiting-message p {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Telas muito pequenas (celular em retrato) */
+        @media (max-width: 380px) {
+            .top-nav-link {
+                padding: 8px 10px;
+                font-size: 0.75rem;
+            }
+            .container {
+                padding: 6px;
+                gap: 6px;
+            }
+            .sidebar {
+                max-height: 40vh;
+            }
+            .preview-container {
+                min-height: 120px;
+                max-height: 140px;
+            }
+            .preview-slide {
+                min-height: 70px;
+            }
+            .btn {
+                padding: 12px 16px;
+                font-size: 0.9rem;
+            }
+            .slide-counter {
+                font-size: 1.35rem;
             }
         }
     </style>
@@ -789,6 +1070,7 @@
             <a href="/" class="top-nav-link">Tela inicial</a>
             <a href="/playlist" class="top-nav-link">Playlist</a>
             <button type="button" class="top-nav-link" id="fullscreenBtn" style="cursor:pointer;border:none;font:inherit;color:inherit;">⛶ Tela cheia</button>
+            <button type="button" class="btn-slides-drawer" id="openSlidesDrawerBtn" disabled title="Ver todos os slides">▦ Slides</button>
             <a href="#" id="adminLogoutLink" class="top-nav-link">Sair</a>
         </nav>
         <div class="connection-status" id="connectionStatus">Conectando...</div>
@@ -897,6 +1179,21 @@
             <button class="btn btn-nav" id="nextBtn" disabled>
                 Próximo →
             </button>
+            <button type="button" class="btn btn-end" id="endPresentationBtn" disabled title="Encerra a apresentação em todos os dispositivos (projetor e controle remoto)">
+                Encerrar apresentação
+            </button>
+        </div>
+    </div>
+
+    <div class="admin-drawer-overlay" id="slidesDrawerOverlay"></div>
+    <div class="admin-drawer" id="slidesDrawer">
+        <div class="admin-drawer-handle"></div>
+        <div class="admin-drawer-header">
+            <h2>Todos os Slides</h2>
+            <button type="button" class="admin-drawer-close" id="closeSlidesDrawerBtn" aria-label="Fechar">✕</button>
+        </div>
+        <div class="admin-drawer-content">
+            <div class="admin-slides-grid" id="adminSlidesGrid"></div>
         </div>
     </div>
 

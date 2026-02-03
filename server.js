@@ -573,6 +573,19 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Encerrar apresentação: apenas limpa o estado (projetor fica tela preta, admin/remote vazios).
+    // NUNCA encerra ou reinicia o servidor — o servidor continua a correr.
+    socket.on('endPresentation', () => {
+        presentationState = {
+            pdfUrl: null,
+            currentSlide: 1,
+            totalSlides: 0,
+            fileName: null
+        };
+        io.emit('stateUpdated', presentationState);
+        console.log('Apresentação encerrada');
+    });
+
     socket.on('disconnect', () => {
         console.log('Cliente desconectado:', socket.id);
     });

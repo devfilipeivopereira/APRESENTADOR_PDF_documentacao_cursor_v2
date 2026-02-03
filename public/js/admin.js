@@ -14,6 +14,12 @@ const currentSlideEl = document.getElementById('currentSlide');
 const totalSlidesEl = document.getElementById('totalSlides');
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
+const endPresentationBtn = document.getElementById('endPresentationBtn');
+const openSlidesDrawerBtn = document.getElementById('openSlidesDrawerBtn');
+const slidesDrawer = document.getElementById('slidesDrawer');
+const slidesDrawerOverlay = document.getElementById('slidesDrawerOverlay');
+const adminSlidesGrid = document.getElementById('adminSlidesGrid');
+const closeSlidesDrawerBtn = document.getElementById('closeSlidesDrawerBtn');
 const mainSlide = document.getElementById('mainSlide');
 const openViewBtn = document.getElementById('openViewBtn');
 const previewSlideContainer = document.getElementById('previewSlideContainer');
@@ -41,6 +47,7 @@ let pdfDoc = null;
 let currentPage = 1;
 let totalPages = 0;
 let projectorWindow = null;
+let gridSlidesRendered = false;
 
 const socket = io();
 
@@ -56,13 +63,15 @@ socket.on('disconnect', () => {
 
 socket.on('initialState', async (state) => {
     console.log('Estado inicial:', state);
-    if (state.pdfUrl) {
-        await loadPDF(state.pdfUrl, state.fileName);
-        currentPage = state.currentSlide || 1;
-        totalPages = state.totalSlides || pdfDoc?.numPages || 0;
-        updateUI();
-        await safeRender();
+    if (!state.pdfUrl) {
+        clearPresentation();
+        return;
     }
+    await loadPDF(state.pdfUrl, state.fileName);
+    currentPage = state.currentSlide || 1;
+    totalPages = state.totalSlides || pdfDoc?.numPages || 0;
+    updateUI();
+    await safeRender();
 });
 
 socket.on('pageUpdated', async (data) => {
@@ -72,6 +81,7 @@ socket.on('pageUpdated', async (data) => {
         if (data.totalSlides) totalPages = data.totalSlides;
         updateUI();
         await safeRender();
+        highlightSlidesGrid();
     }
 });
 
@@ -98,11 +108,38 @@ function delay(ms) {
 }
 
 socket.on('stateUpdated', (state) => {
+    if (!state.pdfUrl) {
+        clearPresentation();
+        return;
+    }
     if (state.totalSlides) {
         totalPages = state.totalSlides;
         updateUI();
     }
 });
+
+function clearPresentation() {
+    pdfDoc = null;
+    currentPage = 1;
+    totalPages = 0;
+    if (waitingMessage) {
+        waitingMessage.innerHTML = '<h2>Nenhuma apresentação carregada</h2><p><a href="/">Clique aqui</a> para fazer upload de um PDF</p>';
+        waitingMessage.style.display = 'block';
+    }
+    currentCanvasA.style.display = 'none';
+    currentCanvasB.style.display = 'none';
+    previewCanvasA.style.display = 'none';
+    previewCanvasB.style.display = 'none';
+    if (fileNameEl) fileNameEl.textContent = '-';
+    if (currentSlideEl) currentSlideEl.textContent = '-';
+    if (totalSlidesEl) totalSlidesEl.textContent = '-';
+    if (playlistError) {
+        playlistError.style.display = 'none';
+        playlistError.textContent = '';
+    }
+    gridSlidesRendered = false;
+    updateButtons();
+}
 
 // --- Playlist: lista suspensa + procurar ---
 function fillPlaylistSelect(items) {
@@ -150,13 +187,18 @@ async function loadPlaylist() {
         fillPlaylistSelect(playlistItems);
     } catch (err) {
         console.error('Playlist:', err);
-        playlistError.textContent = err.message || 'Erro ao carregar.';
+        const msg = (err && err.message === 'Failed to fetch')
+            ? 'Não foi possível contactar o servidor. Verifique a ligação e tente novamente (Atualizar).'
+            : (err && err.message) || 'Erro ao carregar.';
+        playlistError.textContent = msg;
         playlistError.style.display = 'block';
     }
 }
 
 async function loadPresentationFromPlaylist(id) {
     if (!playlistSelect) return;
+    playlistEmpty.style.display = 'none';
+    playlistError.style.display = 'none';
     playlistSelect.disabled = true;
     try {
         const res = await fetch('/api/playlist/load', {
@@ -171,7 +213,11 @@ async function loadPresentationFromPlaylist(id) {
         // pdfLoaded será emitido pelo servidor; admin já escuta e chama loadPDF
     } catch (err) {
         console.error('Load playlist:', err);
-        alert(err.message || 'Erro ao carregar apresentação.');
+        const msg = (err && err.message === 'Failed to fetch')
+            ? 'Não foi possível contactar o servidor. Verifique a ligação e se o servidor está a correr. Tente Atualizar.'
+            : (err && err.message) || 'Erro ao carregar apresentação.';
+        playlistError.textContent = msg;
+        playlistError.style.display = 'block';
     } finally {
         playlistSelect.disabled = false;
     }
@@ -435,6 +481,8 @@ function updateUI() {
 function updateButtons() {
     prevBtn.disabled = !pdfDoc || currentPage <= 1;
     nextBtn.disabled = !pdfDoc || currentPage >= totalPages;
+    if (endPresentationBtn) endPresentationBtn.disabled = !pdfDoc;
+    if (openSlidesDrawerBtn) openSlidesDrawerBtn.disabled = !pdfDoc;
 }
 
 function updateConnectionStatus(connected) {
@@ -456,6 +504,73 @@ async function goToPage(pageNum) {
     socket.emit('changePage', { page: currentPage });
     updateUI();
     await renderAll();
+    highlightSlidesGrid();
+}
+
+// Drawer: todos os slides
+function openSlidesDrawer() {
+    if (!slidesDrawer || !slidesDrawerOverlay) return;
+    slidesDrawer.classList.add('open');
+    slidesDrawerOverlay.classList.add('open');
+    if (!gridSlidesRendered) buildSlidesGrid();
+    else highlightSlidesGrid();
+}
+
+function closeSlidesDrawer() {
+    if (slidesDrawer) slidesDrawer.classList.remove('open');
+    if (slidesDrawerOverlay) slidesDrawerOverlay.classList.remove('open');
+}
+
+async function buildSlidesGrid() {
+    if (!pdfDoc || !adminSlidesGrid) return;
+    adminSlidesGrid.innerHTML = '';
+    for (let i = 1; i <= totalPages; i++) {
+        const div = document.createElement('div');
+        div.className = 'admin-grid-slide' + (i === currentPage ? ' active' : '');
+        div.dataset.page = i;
+        div.innerHTML = '<div class="admin-grid-slide-canvas"><canvas></canvas></div><div class="admin-grid-slide-num">' + i + '</div>';
+        const canvas = div.querySelector('canvas');
+        div.addEventListener('click', () => {
+            goToPage(i);
+            closeSlidesDrawer();
+        });
+        adminSlidesGrid.appendChild(div);
+        await renderThumbnailAdmin(i, canvas);
+    }
+    gridSlidesRendered = true;
+}
+
+async function renderThumbnailAdmin(pageNum, canvas) {
+    if (!pdfDoc || pageNum < 1 || pageNum > totalPages || !canvas) return;
+    try {
+        const page = await pdfDoc.getPage(pageNum);
+        const pageRotation = page.rotate || 0;
+        const compensateRotation = (360 - pageRotation) % 360;
+        const baseViewport = page.getViewport({ scale: 1, rotation: compensateRotation });
+        const scale = 100 / Math.max(baseViewport.width, baseViewport.height);
+        const viewport = page.getViewport({ scale: scale, rotation: compensateRotation });
+        const finalW = Math.floor(viewport.width);
+        const finalH = Math.floor(viewport.height);
+        canvas.width = finalW;
+        canvas.height = finalH;
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.objectFit = 'contain';
+        canvas.style.display = 'block';
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, finalW, finalH);
+        await page.render({ canvasContext: ctx, viewport: viewport, intent: 'display' }).promise;
+    } catch (err) {
+        console.error('Erro thumb apresentador', pageNum, err);
+    }
+}
+
+function highlightSlidesGrid() {
+    if (!adminSlidesGrid) return;
+    adminSlidesGrid.querySelectorAll('.admin-grid-slide').forEach(el => {
+        el.classList.toggle('active', +el.dataset.page === currentPage);
+    });
 }
 
 function openProjectorWindow() {
@@ -496,6 +611,18 @@ function updateOpenViewButton() {
 // Event Listeners
 prevBtn.addEventListener('click', previousPage);
 nextBtn.addEventListener('click', nextPage);
+if (openSlidesDrawerBtn) openSlidesDrawerBtn.addEventListener('click', openSlidesDrawer);
+if (closeSlidesDrawerBtn) closeSlidesDrawerBtn.addEventListener('click', closeSlidesDrawer);
+if (slidesDrawerOverlay) slidesDrawerOverlay.addEventListener('click', closeSlidesDrawer);
+if (endPresentationBtn) {
+    endPresentationBtn.addEventListener('click', () => {
+        if (!pdfDoc) return;
+        if (confirm('Encerrar a apresentação? O projetor e o controle remoto voltarão ao estado vazio.')) {
+            socket.emit('endPresentation');
+            clearPresentation();
+        }
+    });
+}
 if (openViewBtn) openViewBtn.addEventListener('click', openProjectorWindow);
 
 document.addEventListener('keydown', (e) => {

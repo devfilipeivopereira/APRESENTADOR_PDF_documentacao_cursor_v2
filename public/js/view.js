@@ -33,12 +33,14 @@ socket.on('disconnect', () => {
 
 socket.on('initialState', async (state) => {
     console.log('Estado inicial recebido:', state);
-    if (state.pdfUrl) {
-        await loadPDF(state.pdfUrl);
-        if (state.currentSlide) {
-            currentPage = state.currentSlide;
-            await safeRender();
-        }
+    if (!state.pdfUrl) {
+        clearPresentationView();
+        return;
+    }
+    await loadPDF(state.pdfUrl);
+    if (state.currentSlide) {
+        currentPage = state.currentSlide;
+        await safeRender();
     }
 });
 
@@ -73,7 +75,19 @@ function delay(ms) {
 
 socket.on('stateUpdated', (state) => {
     console.log('Estado atualizado:', state);
+    if (!state.pdfUrl) {
+        clearPresentationView();
+    }
 });
+
+function clearPresentationView() {
+    pdfDoc = null;
+    currentPage = 1;
+    // Tela preta: esconder mensagem e canvases (só o fundo preto fica visível)
+    waitingMessage.style.display = 'none';
+    canvasA.style.display = 'none';
+    canvasB.style.display = 'none';
+}
 
 async function loadPDF(url) {
     try {

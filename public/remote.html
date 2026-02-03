@@ -256,6 +256,25 @@
         .btn-quick:active { background: #3d3d5c; }
         .btn-quick:disabled { opacity: 0.3; }
 
+        .btn-end-presentation {
+            width: 100%;
+            margin-top: 8px;
+            padding: 12px 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #c0392b, #a93226);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-end-presentation:active { transform: scale(0.98); }
+        .btn-end-presentation:disabled { opacity: 0.4; cursor: not-allowed; }
+
         .keyboard-hint-remote {
             margin-top: 10px;
             font-size: 0.75rem;
@@ -502,6 +521,9 @@
             <button class="btn-quick" id="firstBtn" disabled>⏮ Primeiro</button>
             <button class="btn-quick" id="lastBtn" disabled>Último ⏭</button>
         </div>
+        <button type="button" class="btn-end-presentation" id="endPresentationBtn" disabled title="Encerra a apresentação no servidor (projetor e apresentador voltam ao estado vazio)">
+            Encerrar apresentação
+        </button>
         <p class="keyboard-hint-remote">← → ou Espaço para avançar/voltar (teclado)</p>
     </div>
 
@@ -589,14 +611,16 @@
 
         socket.on('initialState', async (state) => {
             console.log('Estado inicial:', state);
-            if (state.pdfUrl) {
-                await loadPDF(state.pdfUrl);
-                currentPage = state.currentSlide || 1;
-                totalPages = state.totalSlides || pdfDoc?.numPages || 0;
-                updateUI();
-                // Renderização com múltiplas tentativas para garantir
-                await safeRender();
+            if (!state.pdfUrl) {
+                clearPresentationRemote();
+                return;
             }
+            await loadPDF(state.pdfUrl);
+            currentPage = state.currentSlide || 1;
+            totalPages = state.totalSlides || pdfDoc?.numPages || 0;
+            updateUI();
+            // Renderização com múltiplas tentativas para garantir
+            await safeRender();
         });
 
         socket.on('pageUpdated', (data) => {
@@ -637,11 +661,34 @@
         }
 
         socket.on('stateUpdated', (state) => {
+            if (!state.pdfUrl) {
+                clearPresentationRemote();
+                return;
+            }
             if (state.totalSlides) {
                 totalPages = state.totalSlides;
                 updateUI();
             }
         });
+
+        function clearPresentationRemote() {
+            pdfDoc = null;
+            currentPage = 1;
+            totalPages = 0;
+            gridRendered = false;
+            currentCanvasA.style.display = 'none';
+            currentCanvasB.style.display = 'none';
+            nextCanvasA.style.display = 'none';
+            nextCanvasB.style.display = 'none';
+            if (noNextSlide) noNextSlide.style.display = 'block';
+            $('currentNum').textContent = '-';
+            $('nextNum').textContent = '-';
+            $('currentSlide').textContent = '-';
+            $('totalSlides').textContent = '-';
+            slidesGrid.innerHTML = '';
+            updateUI();
+            if ($('endPresentationBtn')) $('endPresentationBtn').disabled = true;
+        }
 
         async function loadPDF(url) {
             try {
@@ -828,6 +875,7 @@
             $('nextBtn').disabled = !hasPdf || currentPage >= totalPages;
             $('firstBtn').disabled = !hasPdf || currentPage <= 1;
             $('lastBtn').disabled = !hasPdf || currentPage >= totalPages;
+            if ($('endPresentationBtn')) $('endPresentationBtn').disabled = !hasPdf;
         }
 
         function goToPage(page) {
@@ -888,6 +936,13 @@
         $('nextBtn').onclick = () => goToPage(currentPage + 1);
         $('firstBtn').onclick = () => goToPage(1);
         $('lastBtn').onclick = () => goToPage(totalPages);
+        $('endPresentationBtn').onclick = () => {
+            if (!pdfDoc) return;
+            if (confirm('Encerrar a apresentação? O projetor e o apresentador voltarão ao estado vazio.')) {
+                socket.emit('endPresentation');
+                clearPresentationRemote();
+            }
+        };
         $('openDrawerBtn').onclick = openDrawer;
         $('closeDrawerBtn').onclick = closeDrawer;
         $('drawerOverlay').onclick = closeDrawer;
